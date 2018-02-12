@@ -5,7 +5,7 @@
 Estimate the latent factors, C
 }
 \description{
-Estimate the latent factors, C, by first estimating the part of C orthogonal to X and then the part of C in the image of X.
+Estimate the latent factors, C, by first estimating the part of C orthogonal to X and then the part of C in the image of X. The user should supply the expression matrix, Y, the number of columns of C, K, the observed covariates of interest, X, the observed nuisance covariates, Z, and the list (or matrix if b = 1) of relatedness matrices.
 }
 \usage{
 EstimateC_complete(Y, K, X = NULL, Z = NULL, B = NULL, Cperp = NULL, rho = NULL, return.all = T, EstVariances = F, simpleDelta = F, tol.rho = 0.001, max.iter.rho = 15, svd.method = "fast")
@@ -40,7 +40,7 @@ If TRUE, the function will return all values of Cperp and rho for k = 0, 1, ...,
 If TRUE, the function estimates sigma_{0,g}^2 and sigma_{1,g}^2. As of now, this only works when b = 1
 }
   \item{simpleDelta}{
-How Cperp should be estimated. If TRUE, Delta = delta^2 * I_p
+If \code{TRUE}, then it assumes Delta = delta^2 * I_p. Otherwise, Delta = diag(delta_1^2,...,delta_p^2). We recommend the user assign this \code{TRUE} for datasets with large p and n, i.e. 800K methylation array data. Otherwise, the program will be slow.
 }
   \item{tol.rho}{
 Each iteration of sequential PCA completes when ||rho_j - rho_{j-1}||_2 <= b * tol.rho
@@ -61,7 +61,7 @@ Maximum number of iterations j for each sequential PCA iteration
 \item{Cperp}{The part of C orthogonal to X, with Z rotated out}
 \item{rho}{The correlation coefficients corresponding to each relatedness matrix B_i, i = 1,...,b}
 \item{Omega.GLS}{An estimate of (X'V^{-1}X)^{-1}X'V^{-1}C}
-\item{C}{An estimate of C}
+\item{C}{An estimate of C to be used in downstream analyses to do inference on the effects of X on Y}
 }
 \references{
 %% ~put references to the literature/web site here ~

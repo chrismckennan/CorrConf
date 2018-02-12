@@ -5,7 +5,7 @@
 Compute Cperp
 }
 \description{
-Estimate the part of Q.Z' C orthogonal to Q.Z' X, where Q.Z is an n x (n-r) matrix whose columns form an orthogonal basis for ker(Z')
+Estimate the part of Q.Z' C orthogonal to Q.Z' X, where Q.Z is an n x (n-r) matrix whose columns form an orthogonal basis for ker(Z'). The user should supply the expression matrix, Y, the number of columns of C, K, the observed covariates of interest, X, the observed nuisance covariates, Z, and the list (or matrix if b = 1) of relatedness matrices.
 }
 \usage{
 EstimateCperp(Y, K, X = NULL, Z = NULL, B = NULL, simpleDelta = F, return.all = T, tol.rho = 0.001, max.iter.rho = 15, svd.method = "fast")
@@ -28,7 +28,7 @@ An n x r matrix of nuisance covariates, like the intercept
 A list of n x n positive semi-definite relatedness matrices is b > 1 or a matrix if b = 1.
 }
   \item{simpleDelta}{
-How Cperp should be estimated. If TRUE, Delta = delta^2 * I_p
+If \code{TRUE}, then it assumes Delta = delta^2 * I_p. Otherwise, Delta = diag(delta_1^2,...,delta_p^2). We recommend the user assign this \code{TRUE} for datasets with large p and n, i.e. 800K methylation array data. Otherwise, the program will be slow.
 }
   \item{return.all}{
 If TRUE, the function will return all values of Cperp and rho for k = 0, 1, ..., K.
@@ -48,7 +48,7 @@ Maximum number of iterations j for each sequential PCA iteration
 }
 \value{
 \item{K}{The latent dimensions considered, k = 0,1,...,K}
-\item{C}{A list of length K+1 who's entries contain the part of C orthogonal to X, with Z rotated out, when C is assumed to have dimension k = 0,1,...,K}
+\item{C}{A list of length K+1 who's entries contain the part of C orthogonal to X, with Z rotated out, when the image of C is assumed to have dimension k = 0,1,...,K}
 \item{rho}{A b x (K+1) matrix or (K+1) vector containing the correlation coefficients for each B_i}
 }
 \references{

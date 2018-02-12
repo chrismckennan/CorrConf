@@ -2,10 +2,10 @@
 \alias{ChooseK}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Choose the latent factor dimension K
+Estimate the latent factor dimension K
 }
 \description{
-Choose the latent factor dimension K
+Estimate the latent factor dimension K, i.e. the number of columns in the unobserved covariate matrix, C. The user should supply the expression matrix, Y, the observed covariates to be included in the model, Cov, the maximum number of K's to consider, maxK, and the list (or matrix if b = 1) of relatedness matrices.
 }
 \usage{
 ChooseK(Y, Cov = NULL, maxK = 20, B = NULL, nFolds = 10, simpleDelta = F, tol.rho = 0.001, max.iter.rho = 15, svd.method = "fast")
@@ -22,13 +22,13 @@ A n x (d+r) covariate matrix, including the d covariates of interest and r nuisa
 Maximum latent dimension K to consider
 }
   \item{B}{
-A list of n x n positive semi-definite relatedness matrices if b > 1 or a matrix if b = 1.
+A list of length b of n x n positive semi-definite relatedness matrices if b > 1 or a matrix if b = 1. If unspecified, it is assumed all individuals (i.e. samples) are uncorrelated.
 }
   \item{nFolds}{
-Number of folds in cross validation
+Number of folds in cross validation.
 }
   \item{simpleDelta}{
-If \code{TRUE}, then it assumes Delta = delta^2 * I_p. Otherwise, Delta = diag(delta_1^2,...,delta_p^2)
+If \code{TRUE}, then it assumes Delta = delta^2 * I_p. Otherwise, Delta = diag(delta_1^2,...,delta_p^2). We recommend the user assign this \code{TRUE} for datasets with large p and n, i.e. 800K methylation array data. Otherwise, the program will be prohibitively slow.
 }
   \item{tol.rho}{
 Each iteration of sequential PCA completes when ||rho_j - rho_{j-1}||_2 <= b * tol.rho
@@ -46,7 +46,7 @@ Maximum number of iterations j for each sequential PCA iteration
 \value{
 A data frame
 \item{K}{A vector of latent dimensions considered}
-\item{LOO.XV}{A vector of average leave-one-out cross validation for each \code{K} considered}
+\item{LOO.XV}{A vector of the average leave-one-out cross validation for each \code{K} considered}
 \item{K.hat}{The \code{K} that gives the minimum leave-one-out cross validation}
 }
 \references{
