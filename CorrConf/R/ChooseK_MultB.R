@@ -33,10 +33,10 @@ ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, 
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
   clusterExport(cl, c("Y", "B", "maxK", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
-  out.parallel <- parLapply(cl=cl, 1:nFolds, XVal_K.multB)
+  out.parallel <- parSapply(cl=cl, 1:nFolds, XVal_K.multB)
   stopCluster(cl)
   
-  out$LOO.XV <- 1/n/p * apply(out.parallel, 1, sum)
+  out$LOO.XV <- 1/n/p * rowSums(out.parallel)
   out$K.hat <- out$K[which.min(out$LOO.XV)]
   plot(out$K, out$LOO.XV, xlab="K", ylab="LOO-XV", main="Leave one out cross validation"); lines(out$K, out$LOO.XV)
   points(out$K.hat, min(out$LOO.XV), pch="x", col="red")
@@ -56,7 +56,7 @@ XVal_K.multB <- function(i) {
   train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method="fast")
   test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i)
   
-  return(list(Rho=test.i$Rho, Loss=test.i$Fnorm2, Loss.LOO=test.loo.i$Loss, CorrE=test.loo.i$CorrE, Loss.noCorr=test.nocorr.i$Loss))  
+  return(test.loo.i$Loss)
 }
 
 

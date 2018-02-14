@@ -44,10 +44,11 @@ Optimize.Theta.multB <- function(Y, maxK, B, Cov=NULL, tol.rho=1e-3, max.iter.rh
 #This is only for a given K and good starting point for rho
 #The convergence criterion is the Cauchy-ness of rho
 
-seq.PCA.multB <- function(Y, B, K, Rho.0, Delta.0, svd.method="fast", max.iter=10, tol.rho=1e-3) {
+seq.PCA.multB <- function(Y, B, K, Rho.0, Delta.0=NULL, svd.method="fast", max.iter=10, tol.rho=1e-3) {
   n <- ncol(Y)
   p <- nrow(Y)
   b <- length(B)
+  if (is.null(Delta.0)) {Delta.0 <- rep(1,p)}
   
   Rho.mat <- matrix(0, nrow=max.iter+1, ncol=b)
   Rho.mat[1,] <- Rho.0
@@ -74,6 +75,7 @@ seq.PCA.multB <- function(Y, B, K, Rho.0, Delta.0, svd.method="fast", max.iter=1
       return(list(Rho=Rho.1, Delta=out.rho.1$Delta, all.Rho=Rho.mat[1:(i+1),], out=1))
     }
     Rho.0 <- Rho.1
+    Delta.0 <- out.rho.1$Delta
     Rho.mat[i+1,] <- Rho.0
   }
   return(list(Rho=Rho.0, Delta=out.rho.1$Delta, all.Rho=Rho.mat, out=0))

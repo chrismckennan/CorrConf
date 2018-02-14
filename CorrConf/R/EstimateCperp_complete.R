@@ -33,7 +33,11 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, return.al
   
   ######No B######
   if (is.null(B)) {
-    max.iter.svd <- 3
+    if (simpleDelta) {
+      max.iter.svd <- 1
+    } else {
+      max.iter.svd <- 3
+    }
     
     if (!is.null(X)) {
       Y <- Y %*% Q.X

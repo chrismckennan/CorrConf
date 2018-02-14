@@ -69,15 +69,52 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   d <- ncol(X)
   Q.X <- qr.Q(qr(X), complete = T)[,(d+1):n]
   
+  ##Perform 1 iteration of sequential PCA if simpleDelta is TRUE##
+  if (simpleDelta) {
+    Y2 <- Y %*% Q.X
+    if (is.list(B)) {
+      out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, max.iter=1)
+      rho <- out.seq$Rho
+      Delta.0 <- out.seq$Delta
+    } else {
+      out.seq <- seq.PCA(Y=Y2, K=K, B=t(Q.X) %*% B %*% Q.X, rho.0=rho, max.iter=1)
+      rho <- out.seq$rho
+      Delta.0 <- out.seq$Delta
+    }
+    V <- EstimateV.complete(rho, B)
+    V.tilde <- t(Q.X) %*% V %*% Q.X; V.tilde.inv <- solve(V.tilde)
+    sqrt.V.tilde <- sqrt.mat(V.tilde.inv)
+    Y2 <- Y2 %*% sqrt.V.tilde
+    if (svd.method=="fast") {
+      Cperp <- sqrt(n) * cbind(svd(sqrt.mat(V.tilde) %*% cbind(irlba(A=Y2 / sqrt(Delta.0), nv = K, tol = 1/sqrt(n) * 1e-4)$v[,1:K]))$u)
+    } else {
+      Cperp <- sqrt(n) * cbind(svd(sqrt.mat(V.tilde) %*% cbind(svd(Y2 / sqrt(Delta.0), nv=K)$v[,1:K]))$u)
+    }
+    Cperp <- Q.X %*% Cperp
+    if (return.all) {
+      out$Cperp[[K+1]] <- Cperp
+      if (is.list(B)) {
+        out$rho[K+1,] <- rho
+      } else {
+        out$rho[K+1] <- rho
+      }
+    } else {
+      out$Cperp <- Cperp
+      out$rho <- rho
+    }
+  }
+  
   ######Estimate Omega with one or multiple B's######
-  V <- EstimateV.complete(rho, B)
-  V.tilde <- t(Q.X) %*% V %*% Q.X; V.tilde.inv <- solve(V.tilde)
+  if (!simpleDelta) {
+    V <- EstimateV.complete(rho, B)
+    V.tilde <- t(Q.X) %*% V %*% Q.X; V.tilde.inv <- solve(V.tilde)
+    sqrt.V.tilde <- sqrt.mat(V.tilde.inv)
+    Y2 <- Y %*% (Q.X %*% sqrt.V.tilde)
+  }
   
   #I assume at least one iteration of sequential PCA has been performed#
-  sqrt.V.tilde <- sqrt.mat(V.tilde.inv)
-  Y2 <- Y %*% Q.X %*% sqrt.V.tilde
   Cperp.reduced <- sqrt.V.tilde %*% t(Q.X) %*% Cperp; var.mat <- solve(t(Cperp.reduced) %*% Cperp.reduced)
-  L.hat <- Y2 %*% Cperp.reduced %*% var.mat
+  L.hat <- Y2 %*% (Cperp.reduced %*% var.mat)
   Resids2 <- Y2 - L.hat %*% t(Cperp.reduced); Delta.hat <- rowSums(Resids2^2)/(n-d-K)
   Y1 <- Y %*% solve(V, X) %*% solve(t(X) %*% solve(V, X))
   out$Omega.GLS <- solve(t(L.hat / Delta.hat) %*% L.hat - p*var.mat, t(L.hat / Delta.hat) %*% Y1)   #K x d

@@ -39,7 +39,7 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho
   n_cores <- max(detectCores() - 1, 1)
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
-  clusterExport(cl, c("SYY", "B", "maxK", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
+  clusterExport(cl, c("SYY", "B", "maxK", "tol.rho", "max.iter.rho", "svd.method", "folds.rows", "p"), envir=environment())
   out.parallel <- parSapply(cl=cl, Y.list, XVal_K.multB.simrho)
   stopCluster(cl)
   
