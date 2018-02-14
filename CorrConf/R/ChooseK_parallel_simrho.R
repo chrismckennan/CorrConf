@@ -2,7 +2,7 @@ require(parallel)
 
 ##This chooses K
 
-ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, max.iter.rho=15, svd.method="fast") {
+ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, max.iter.rho=15, svd.method="fast", plotit=T) {
   if (maxK < 1) {
     return(0)
   }
@@ -42,8 +42,11 @@ ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, ma
   
   out$LOO.XV <- 1/n/p * apply(out.parallel, 1, sum)
   out$K.hat <- out$K[which.min(out$LOO.XV)]
-  plot(out$K, out$LOO.XV, xlab="K", ylab="LOO-XV", main="Leave one out cross validation"); lines(out$K, out$LOO.XV)
-  points(out$K.hat, min(out$LOO.XV), pch="x", col="red")
+  if (plotit) {
+    plot(out$K, out$LOO.XV, xlab="K", ylab="LOO-XV", main="Leave one out cross validation"); lines(out$K, out$LOO.XV)
+    points(out$K.hat, min(out$LOO.XV), pch="x", col="red")
+  }
+
   return(out)
 }
 

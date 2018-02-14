@@ -1,7 +1,7 @@
 require(irlba)
 require(parallel)
 
-ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=3, svd.method="fast") {
+ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=3, svd.method="fast", plotit=T) {
   if (maxK < 1) {
     return(0)
   }
@@ -46,8 +46,10 @@ ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=
   out <- list()
   out$K <- seq(0, maxK)
   out$Loss <- rowSums(out.parallel)/(n*p)
-  plot(out$K, out$Loss, xlab="K.hat", ylab="LOO X-val")
-  points(out$K[which.min(out$Loss)], min(out$Loss), pch="x", col="red")
+  if (plotit) {
+    plot(out$K, out$Loss, xlab="K.hat", ylab="LOO X-val")
+    points(out$K[which.min(out$Loss)], min(out$Loss), pch="x", col="red")
+  }
   out$K.hat <- out$K[which.min(out$Loss)]
   return(out)
 }
