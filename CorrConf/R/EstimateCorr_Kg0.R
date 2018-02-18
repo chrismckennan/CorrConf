@@ -86,6 +86,11 @@ sqrt.mat2 <- function(X) {  #R^2 = X
   return( list(R=sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u), Rinv=sweep(s$u, 2, 1/sqrt(s$d), "*") %*% t(s$u) ) )
 }
 
+sqrt.mat <- function(X) {
+  s <- svd(X)
+  return(sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u))
+}
+
 CreateV <- function(B, Rho) {
   n <- ncol(B[[1]])
   V <- (1-sum(Rho))*diag(n)

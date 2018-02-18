@@ -118,6 +118,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   Resids2 <- Y2 - L.hat %*% t(Cperp.reduced); Delta.hat <- rowSums(Resids2^2)/(n-d-K)
   Y1 <- Y %*% solve(V, X) %*% solve(t(X) %*% solve(V, X))
   out$Omega.GLS <- solve(t(L.hat / Delta.hat) %*% L.hat - p*var.mat, t(L.hat / Delta.hat) %*% Y1)   #K x d
+  out$Omega.GLS.naive <- solve(t(L.hat / Delta.hat) %*% L.hat, t(L.hat / Delta.hat) %*% Y1)
   
   #Estimate C#
   out$C <- X %*% t(out$Omega.GLS) + V %*% Q.X %*% solve(t(Q.X) %*% V %*% Q.X, t(Q.X) %*% Cperp)
