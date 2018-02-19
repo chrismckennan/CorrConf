@@ -18,6 +18,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
     out$Cperp <- NULL
     return(out)
   }
+  if (is.null(B)) {return.Bhat <- T}
   
   out <- list()
   out$rho <- rho
@@ -126,7 +127,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   if (!is.null(Z)) { out$C <- Q.Z %*% out$C }
   if (return.Bhat) {
     out$Bhat <- Y1 - L.hat %*% out$Omega.GLS
-    tscores <- out$Bhat / sqrt(Delta.hat) / sqrt(solve(t(X) %*% X) + t(out$Omega.GLS) %*% out$Omega.GLS)
+    tscores <- sweep(x = out$Bhat / sqrt(Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X))) + diag(t(out$Omega.GLS) %*% var.mat %*% out$Omega.GLS)), FUN = "/", check.margin = F)
     out$zscores <- qnorm(pt(tscores, df=n-d-K))
     out$pvalues <- 2*pt(-abs(tscores), df=n-d-K)
   }
