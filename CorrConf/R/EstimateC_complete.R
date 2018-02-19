@@ -130,6 +130,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
     tscores <- sweep(x = out$Bhat / sqrt(Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X))) + diag(t(out$Omega.GLS) %*% var.mat %*% out$Omega.GLS)), FUN = "/", check.margin = F)
     out$zscores <- qnorm(pt(tscores, df=n-d-K))
     out$pvalues <- 2*pt(-abs(tscores), df=n-d-K)
+    out$Delta.hat <- Delta.hat
   }
   
   ######Estimate variances with one B######
