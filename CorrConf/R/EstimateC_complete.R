@@ -3,7 +3,7 @@
 require(irlba)
 require(parallel)
 
-EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, tol.rho=1e-3, max.iter.rho=15, svd.method="fast") {
+EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
   if (is.null(X)) {
     out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$X <- X
@@ -70,7 +70,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   Q.X <- qr.Q(qr(X), complete = T)[,(d+1):n]
   
   ##Perform 1 iteration of sequential PCA if simpleDelta is TRUE##
-  if (simpleDelta) {
+  if (simpleDelta && !is.null(B)) {
     Y2 <- Y %*% Q.X
     if (is.list(B)) {
       out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, max.iter=1)
@@ -105,8 +105,9 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   }
   
   ######Estimate Omega with one or multiple B's######
-  if (!simpleDelta) {
+  if (!simpleDelta || is.null(B)) {
     V <- EstimateV.complete(rho, B)
+    if (is.null(V)) {V <- diag(n)}
     V.tilde <- t(Q.X) %*% V %*% Q.X; V.tilde.inv <- solve(V.tilde)
     sqrt.V.tilde <- sqrt.mat(V.tilde.inv)
     Y2 <- Y %*% (Q.X %*% sqrt.V.tilde)
@@ -123,6 +124,12 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   #Estimate C#
   out$C <- X %*% t(out$Omega.GLS) + V %*% Q.X %*% solve(t(Q.X) %*% V %*% Q.X, t(Q.X) %*% Cperp)
   if (!is.null(Z)) { out$C <- Q.Z %*% out$C }
+  if (return.Bhat) {
+    out$Bhat <- Y1 - L.hat %*% out$Omega.GLS
+    tscores <- out$Bhat / sqrt(Delta.hat) / sqrt(solve(t(X) %*% X) + t(out$Omega.GLS) %*% out$Omega.GLS)
+    out$zscores <- qnorm(pt(tscores, df=n-d-K))
+    out$pvalues <- 2*pt(-abs(tscores), df=n-d-K)
+  }
   
   ######Estimate variances with one B######
   if (EstVariances && is.matrix(B)) {
@@ -139,6 +146,9 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
 }
 
 EstimateV.complete <- function(rho, B) {
+  if (is.null(B)) {
+    return(NULL)
+  }
   if (is.matrix(B)) {
     return( (1-rho)*diag(nrow(B)) + rho*B )
   }
