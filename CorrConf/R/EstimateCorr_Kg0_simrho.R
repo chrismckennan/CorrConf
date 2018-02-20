@@ -14,7 +14,7 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, tol.rho=1e-3, ma
   out <- list()
   out$K <- 0:maxK
   out$Rho <- matrix(0, nrow=maxK+1, ncol=b)
-  out$C <- vector("list", maxK+1); out$C[[1]] <- NULL
+  out$C <- vector("list", maxK+1)
   
   #K = 0#
   out.K0 <- Est.Corr.multB(Y=SYY, B=B, simple.rho=T)

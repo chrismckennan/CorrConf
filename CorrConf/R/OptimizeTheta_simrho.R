@@ -30,7 +30,6 @@ Optimize.Theta.simrho <- function(SYY, Lambda, maxK, tol.rho=1e-3, max.iter.rho=
   out$K <- 0:maxK
   out$rho <- rep(0, maxK+1)
   out$C <- vector(mode = "list", length = maxK)
-  out$C[[1]] <- NULL
   
   ##K = 0##
   rho.0 <- PL.simdelta(Y=diag(SYY), Lambda=Lambda, rho=seq(0.05, 0.95, by=0.05))$rho
