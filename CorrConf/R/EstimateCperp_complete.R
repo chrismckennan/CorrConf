@@ -107,7 +107,7 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, return.al
     }
     
     if (return.all) {
-      out$C <- out.1$C
+      out$C <- out.1$C; if (K==0){out$C <- vector("list", 1); out$C[[1]] <- NULL}
       out$K <- 0:K
       out$rho <- out.1$Rho
       names(out$C) <- out$K; rownames(out$rho) <- out$K
