@@ -102,12 +102,12 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, return.al
     } else {   #Multiple delta
       out.1 <- Optimize.Theta.multB(Y = Y, maxK = K, B = B, Cov = X, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
     }
-    if (!is.null(X)) {
+    if (!is.null(X) && K > 0) {
       out.1$C <- lapply(out.1$C, function(x, A) {if(is.null(x)) {return(NULL)}; return(A %*% x)}, A=Q.X)
     }
     
     if (return.all) {
-      out$C <- out.1$C; if (K==0){out$C <- vector("list", 1); out$C[[1]] <- NULL}
+      out$C <- out.1$C
       out$K <- 0:K
       out$rho <- out.1$Rho
       names(out$C) <- out$K; rownames(out$rho) <- out$K

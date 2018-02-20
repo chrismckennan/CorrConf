@@ -4,7 +4,6 @@ require(irlba)
 require(parallel)
 
 EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
-  if (K == 0) {simpleDelta <- F}
   if (is.null(X)) {
     out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$X <- X
@@ -71,6 +70,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   d <- ncol(X)
   Q.X <- qr.Q(qr(X), complete = T)[,(d+1):n]
 
+  if (K == 0) {simpleDelta <- F}
   
   ##Perform 1 iteration of sequential PCA if simpleDelta is TRUE##
   if (simpleDelta && !is.null(B)) {
