@@ -70,7 +70,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   n <- ncol(Y)
   d <- ncol(X)
   Q.X <- qr.Q(qr(X), complete = T)[,(d+1):n]
-  
+
   
   ##Perform 1 iteration of sequential PCA if simpleDelta is TRUE##
   if (simpleDelta && !is.null(B)) {
