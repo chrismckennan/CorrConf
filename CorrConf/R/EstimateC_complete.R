@@ -4,6 +4,7 @@ require(irlba)
 require(parallel)
 
 EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
+  if (K == 0) {simpleDelta <- F}
   if (is.null(X)) {
     out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$X <- X
@@ -70,6 +71,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   d <- ncol(X)
   Q.X <- qr.Q(qr(X), complete = T)[,(d+1):n]
   
+  
   ##Perform 1 iteration of sequential PCA if simpleDelta is TRUE##
   if (simpleDelta && !is.null(B)) {
     Y2 <- Y %*% Q.X
@@ -114,6 +116,20 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
     Y2 <- Y %*% (Q.X %*% sqrt.V.tilde)
   }
   
+  if (K == 0) {
+    if (return.Bhat) {
+      out$Bhat <- Y %*% solve(V, X) %*% solve(t(X) %*% solve(V, X))
+      out$Delta.hat <- rowSums(Y2^2)/(n-d-K)
+      out$tscores <- sweep(x = out$Bhat / sqrt(out$Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X)))), FUN = "/", check.margin = F)
+      out$zscores <- qnorm(pt(out$tscores, df=n-d-K))
+      out$pvalues <- 2*pt(-abs(out$tscores), df=n-d-K)
+    }
+    out$C <- NULL
+    out$Omega.GLS <- NULL
+    out$Omega.GLS.naive <- NULL
+    return(out)
+  }
+  
   #I assume at least one iteration of sequential PCA has been performed#
   Cperp.reduced <- sqrt.V.tilde %*% t(Q.X) %*% Cperp; var.mat <- solve(t(Cperp.reduced) %*% Cperp.reduced)
   L.hat <- Y2 %*% (Cperp.reduced %*% var.mat)
@@ -127,9 +143,9 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   if (!is.null(Z)) { out$C <- Q.Z %*% out$C }
   if (return.Bhat) {
     out$Bhat <- Y1 - L.hat %*% out$Omega.GLS
-    tscores <- sweep(x = out$Bhat / sqrt(Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X))) + diag(t(out$Omega.GLS) %*% var.mat %*% out$Omega.GLS)), FUN = "/", check.margin = F)
-    out$zscores <- qnorm(pt(tscores, df=n-d-K))
-    out$pvalues <- 2*pt(-abs(tscores), df=n-d-K)
+    out$tscores <- sweep(x = out$Bhat / sqrt(Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X))) + diag(t(out$Omega.GLS) %*% var.mat %*% out$Omega.GLS)), FUN = "/", check.margin = F)
+    out$zscores <- qnorm(pt(out$tscores, df=n-d-K))
+    out$pvalues <- 2*pt(-abs(out$tscores), df=n-d-K)
     out$Delta.hat <- Delta.hat
   }
   

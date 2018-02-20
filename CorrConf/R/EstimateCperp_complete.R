@@ -10,6 +10,7 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, return.al
   out$rho <- NULL
   out$C <- NULL
   p <- nrow(Y)
+  if (is.null(B) && K == 0){return(out)}
   
   if (is.list(B) && length(B) == 1) {
     B <- B[[1]]
