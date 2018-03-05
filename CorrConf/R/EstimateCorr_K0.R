@@ -4,6 +4,7 @@
 #This estimates the rho's for each matrix in B and the variance multipliers, Delta
 # A %*% theta - c >= 0
 Est.Corr.multB <- function(Y, B, theta.0=NULL, A=NULL, c=NULL, max.iter=100, tol=1e-6, simple.rho = F) {
+  return(0)
   n <- ncol(Y)
   b <- length(B)
   
@@ -13,7 +14,7 @@ Est.Corr.multB <- function(Y, B, theta.0=NULL, A=NULL, c=NULL, max.iter=100, tol
     }
     if (is.null(A)) {A <- diag(b)}
     if (is.null(c)) {c <- rep(1e-8,b)}
-    return(0)
+    
     out.optim <- constrOptim(theta=theta.0, f=mll.multB.simrho, grad=grad.mll.multB.simrho, ui=A, ci=c, control=list(maxit=max.iter, reltol=tol), method="BFGS", SYY=Y, B=B)
     return(list(Rho=out.optim$par, Delta=NULL, out=out.optim$convergence))
   } else {
