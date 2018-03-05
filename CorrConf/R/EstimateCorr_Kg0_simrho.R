@@ -8,7 +8,6 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, A=NULL, c=NULL, 
     SYY <- t(Q) %*% SYY %*% Q    #No more covariates
     B <- lapply(B, function(x, Q){t(Q) %*% x %*% Q}, Q=Q)
   }
-  return(0)
   n <- ncol(SYY)
   b <- length(B)
   
@@ -19,6 +18,7 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, A=NULL, c=NULL, 
   
   #K = 0#
   out.K0 <- Est.Corr.multB(Y=SYY, B=B, simple.rho=T, A=A, c=c)
+  return(0)
   out$Rho[1,] <- out.K0$Rho
   if (maxK == 0) {
     return(out)
