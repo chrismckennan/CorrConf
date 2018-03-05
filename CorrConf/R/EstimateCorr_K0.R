@@ -4,10 +4,9 @@
 #This estimates the rho's for each matrix in B and the variance multipliers, Delta
 # A %*% theta - c >= 0
 Est.Corr.multB <- function(Y, B, theta.0=NULL, A=NULL, c=NULL, max.iter=100, tol=1e-6, simple.rho = F) {
-  return(0)
   n <- ncol(Y)
   b <- length(B)
-  
+  return(0)
   if (simple.rho) {
     if (is.null(theta.0)) {
       theta.0 <- c(1-sum(rep(min(0.2, 1/b), b-1)), rep(min(0.2, 1/b), b-1))
