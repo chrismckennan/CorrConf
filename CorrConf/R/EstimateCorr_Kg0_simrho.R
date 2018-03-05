@@ -1,7 +1,7 @@
 require(irlba)
 
 #######Estimate rho and C for each k = 0, 1,...,K#######
-Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast") {
+Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, A=NULL, c=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast") {
   maxK <- max(0, maxK); maxK <- round(maxK)
   if (!is.null(Cov)) {
     Q <- qr.Q(qr(Cov), complete=T)[,(ncol(Cov)+1):nrow(Cov)]
@@ -17,14 +17,14 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, tol.rho=1e-3, ma
   out$C <- vector("list", maxK+1)
   
   #K = 0#
-  out.K0 <- Est.Corr.multB(Y=SYY, B=B, simple.rho=T)
+  out.K0 <- Est.Corr.multB(Y=SYY, B=B, simple.rho=T, A=A, c=c)
   out$Rho[1,] <- out.K0$Rho
   if (maxK == 0) {
     return(out)
   }
   Rho.0 <- out.K0$Rho
   for (k in 1:maxK) {
-    out.k <- seq.PCA.multB.simrho(SYY=SYY, B=B, K=k, Rho.0=Rho.0, svd.method=svd.method)
+    out.k <- seq.PCA.multB.simrho(SYY=SYY, B=B, K=k, Rho.0=Rho.0, A=A, c=c, svd.method=svd.method)
     Rho.0 <- out.k$Rho
     V.0 <- CreateV(B=B, Rho=Rho.0)
     out.sqrt.V <- sqrt.mat2(V.0); sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv
@@ -40,17 +40,14 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, tol.rho=1e-3, ma
 #This is only for a given K and good starting point for rho
 #The convergence criterion is the Cauchy-ness of rho
 
-seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, svd.method="fast", max.iter=10, tol.rho=1e-3) {
+seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, A=NULL, c=NULL, svd.method="fast", max.iter=10, tol.rho=1e-3) {
   n <- ncol(SYY)
   b <- length(B)
   
   Rho.mat <- matrix(0, nrow=max.iter+1, ncol=b)
   Rho.mat[1,] <- Rho.0
   for (i in 1:max.iter) {
-    V.0 <- (1-sum(Rho.0))*diag(n)
-    for (j in 1:b) {
-      V.0 <- V.0 + Rho.0[j]*B[[j]]
-    }
+    V.0 <- CreateV(B, Rho.0)
     out.sqrt.V <- sqrt.mat2(V.0)
     sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv
     
@@ -62,9 +59,9 @@ seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, svd.method="fast", max.iter=1
     C.0 <- sqrt.V %*% s.0$v[,1:K]
     Q.C <- qr.Q(qr(C.0), complete=T)[,(K+1):n]
     
-    out.rho.1 <- Est.Corr.multB(Y=t(Q.C) %*% SYY %*% Q.C, B=lapply(B, function(x, Q.C){t(Q.C) %*% x %*% Q.C}, Q.C=Q.C), theta.0=Rho.0, simple.rho=T)
+    out.rho.1 <- Est.Corr.multB(Y=t(Q.C) %*% SYY %*% Q.C, B=lapply(B, function(x, Q.C){t(Q.C) %*% x %*% Q.C}, Q.C=Q.C), theta.0=Rho.0, simple.rho=T, A=A, c=c)
     Rho.1 <- out.rho.1$Rho
-    if (sqrt(sum((Rho.0-Rho.1)^2)) < b*tol.rho && i > 1) {
+    if (norm(Rho.0/norm(Rho.0,type="2")-Rho.1/norm(Rho.1,type="2"), type="2") < b*tol.rho && i > 1) {
       Rho.mat[i+1,] <- Rho.1
       return(list(Rho=Rho.1, all.Rho=Rho.mat[1:(i+1),], out=1))
     }

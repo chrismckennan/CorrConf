@@ -4,7 +4,7 @@
 require(parallel)
 require(irlba)
 
-ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
+ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A=NULL, c=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
   if (maxK < 1) {
     return(0)
   }
@@ -39,7 +39,7 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho
   n_cores <- max(detectCores() - 1, 1)
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
-  clusterExport(cl, c("SYY", "B", "maxK", "tol.rho", "max.iter.rho", "svd.method", "folds.rows", "p"), envir=environment())
+  clusterExport(cl, c("SYY", "B", "maxK", "A", "c", "tol.rho", "max.iter.rho", "svd.method", "folds.rows", "p"), envir=environment())
   out.parallel <- parSapply(cl=cl, Y.list, XVal_K.multB.simrho)
   stopCluster(cl)
   
@@ -61,7 +61,7 @@ XVal_K.multB.simrho <- function(Y.test) {
   p.0 <- p - p.1
   
   SYY.0 <- 1/p.0 * (p * SYY - t(Y.test) %*% Y.test)
-  train.i <- Optimize.Theta.multB.simrho(SYY = SYY.0, B = B, maxK = maxK, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
-  test.loo.i <- Test.LOOXV.multB(Y.0=Y.test, B=B, train=train.i)
+  train.i <- Optimize.Theta.multB.simrho(SYY = SYY.0, B = B, maxK = maxK, A=A, c=c, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+  test.loo.i <- Test.LOOXV.multB(Y.0=Y.test, B=B, train=train.i, A=A, c=c)
   return(test.loo.i$Loss)
 }

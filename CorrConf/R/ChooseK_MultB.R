@@ -4,7 +4,7 @@
 require(parallel)
 require(irlba)
 
-ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
+ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A=NULL, c=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
   if (maxK < 1) {
     return(0)
   }
@@ -32,7 +32,7 @@ ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, 
   n_cores <- max(detectCores() - 1, 1)
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
-  clusterExport(cl, c("Y", "B", "maxK", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
+  clusterExport(cl, c("Y", "B", "maxK", "A", "c", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
   out.parallel <- parSapply(cl=cl, 1:nFolds, XVal_K.multB)
   stopCluster(cl)
   
@@ -55,15 +55,15 @@ XVal_K.multB <- function(i) {
   Y.1 <- Y[folds.rows != i,];    #Train with this data (estimate C)
   Y.0 <- Y[folds.rows == i,];    #Test with these data
   
-  train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method="fast")
-  test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i)
+  train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, A=A, c=c, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method="fast")
+  test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i, A=A, c=c)
   
   return(test.loo.i$Loss)
 }
 
 
 ####This function performs leave-one-out cross validation on the held out genes after we have estimated C
-Test.LOOXV.multB <- function(Y.0, B, train) {
+Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL) {
   Rho <- NULL
   K <- train$K
   C.list <- train$C
@@ -76,8 +76,8 @@ Test.LOOXV.multB <- function(Y.0, B, train) {
   for (k in K) {
     if (k == 0) {
       if (is.null(Rho)) {
-        out.rho.k <- Est.Corr.multB(Y=SYY.0, B=B, simple.rho=T)
-        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k; Rho.previous[Rho.previous < 0.05] <- 0.05
+        out.rho.k <- Est.Corr.multB(Y=SYY.0, B=B, simple.rho=T, A=A, c=c)
+        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k; Rho.previous[Rho.previous == 0] <- 0.05; Rho.previous[abs(Rho.previous) < 0.05] <- 0.05 * sign(Rho.previous[abs(Rho.previous) < 0.05])
       }
       V.k <- CreateV(B = B, Rho = Rho.k); sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
       Y.k <- Y.0 %*% sqrt.Vinv.k
@@ -87,8 +87,8 @@ Test.LOOXV.multB <- function(Y.0, B, train) {
       C.k <- C.list[[k+1]]
       Q.k <- qr.Q(qr(C.k), complete=T)[,(k+1):n]
       if (is.null(Rho)) {
-        out.rho.k <- Est.Corr.multB(Y = t(Q.k) %*% SYY.0 %*% Q.k, B = lapply(B, function(x, Q.k){t(Q.k) %*% x %*% Q.k}, Q=Q.k), theta.0 = Rho.previous, simple.rho=T)
-        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k; Rho.previous[Rho.previous < 0.05] <- 0.05
+        out.rho.k <- Est.Corr.multB(Y = t(Q.k) %*% SYY.0 %*% Q.k, B = lapply(B, function(x, Q.k){t(Q.k) %*% x %*% Q.k}, Q.k=Q.k), theta.0 = Rho.previous, simple.rho=T, A=A, c=c)
+        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k; Rho.previous[Rho.previous == 0] <- 0.05; Rho.previous[abs(Rho.previous) < 0.05] <- 0.05 * sign(Rho.previous[abs(Rho.previous) < 0.05])
       } else {
         Rho.k <- Rho
       }
@@ -96,7 +96,7 @@ Test.LOOXV.multB <- function(Y.0, B, train) {
       Y.k <- Y.0 %*% sqrt.Vinv.k; C.k <- sqrt.Vinv.k %*% C.k
 
       L.k <- Y.k %*% C.k %*% solve(t(C.k) %*% C.k)
-      H.k <- apply(C.k, 1, function(x, A) {sum(x * (A %*% x))}, A=solve(t(C.k) %*% C.k))
+      H.k <- apply(C.k, 1, function(x, Ak) {sum(x * (Ak %*% x))}, Ak=solve(t(C.k) %*% C.k))
       R.k <- Y.k - L.k %*% t(C.k)
       out$Loss[k+1] <- sum( sweep(x = R.k, MARGIN = 2, 1/(1-H.k), FUN = "*")^2 )
     }

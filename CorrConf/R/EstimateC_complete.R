@@ -3,9 +3,12 @@
 require(irlba)
 require(parallel)
 
-EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
+EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A=NULL, c=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
+  if (is.list(B) && length(B) > 1) {
+    if (norm(B[[1]] - diag(nrow(B[[1]])), type="2") > 1e-8) {B <- c( list(diag(nrow(B[[1]]))), B )}
+  }
   if (is.null(X)) {
-    out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
+    out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, A=A, c=c, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$X <- X
     out$Z <- Z
     if (!is.null(Z)) {
@@ -27,7 +30,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   out$Cperp <- Cperp
   
   if (is.null(Cperp) || (!is.null(B) && is.null(rho))) {
-    out.perp <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, return.all=return.all, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
+    out.perp <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, A=A, c=c, return.all=return.all, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$Cperp <- out.perp$C
     if (return.all) {
       Cperp <- out.perp$C[[K+1]]
@@ -76,7 +79,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, Cperp=NULL, rho=NUL
   if (simpleDelta && !is.null(B)) {
     Y2 <- Y %*% Q.X
     if (is.list(B)) {
-      out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, max.iter=1)
+      out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, A=A, c=c, max.iter=1)
       rho <- out.seq$Rho
       Delta.0 <- out.seq$Delta
     } else {
@@ -170,7 +173,7 @@ EstimateV.complete <- function(rho, B) {
   if (is.matrix(B)) {
     return( (1-rho)*diag(nrow(B)) + rho*B )
   }
-  V <- (1-sum(rho))*diag(nrow(B[[1]]))
+  V <- matrix(0,nrow(B[[1]]),ncol(B[[1]]))
   for (j in 1:length(rho)) {
     V <- V + rho[j] * B[[j]]
   }
