@@ -57,6 +57,7 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A=NULL,
 ######The function to run in parallel######
 
 XVal_K.multB.simrho <- function(Y.test) {
+  Y.test <- as.matrix(Y.test)
   p.1 <- nrow(Y.test)
   p.0 <- p - p.1
   

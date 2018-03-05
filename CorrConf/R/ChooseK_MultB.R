@@ -52,8 +52,8 @@ ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A=NULL, c=NULL
 XVal_K.multB <- function(i) {
 
   ##Run code##
-  Y.1 <- Y[folds.rows != i,];    #Train with this data (estimate C)
-  Y.0 <- Y[folds.rows == i,];    #Test with these data
+  Y.1 <- as.matrix(Y[folds.rows != i,]);    #Train with this data (estimate C)
+  Y.0 <- as.matrix(Y[folds.rows == i,]);    #Test with these data
   
   train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, A=A, c=c, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method="fast")
   test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i, A=A, c=c)
