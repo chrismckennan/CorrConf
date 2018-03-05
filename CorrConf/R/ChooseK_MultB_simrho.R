@@ -63,6 +63,7 @@ XVal_K.multB.simrho <- function(Y.test) {
   
   SYY.0 <- 1/p.0 * (p * SYY - t(Y.test) %*% Y.test)
   train.i <- Optimize.Theta.multB.simrho(SYY = SYY.0, B = B, maxK = maxK, A=A, c=c, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+  return(0)
   test.loo.i <- Test.LOOXV.multB(Y.0=Y.test, B=B, train=train.i, A=A, c=c)
   return(test.loo.i$Loss)
 }
