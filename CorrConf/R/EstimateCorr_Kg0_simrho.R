@@ -18,7 +18,6 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, A=NULL, c=NULL, 
   
   #K = 0#
   out.K0 <- Est.Corr.multB(Y=SYY, B=B, simple.rho=T, A=A, c=c)
-  return(0)
   out$Rho[1,] <- out.K0$Rho
   if (maxK == 0) {
     return(out)
