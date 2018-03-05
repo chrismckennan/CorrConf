@@ -22,9 +22,9 @@ ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=F, A=NU
   if (is.list(B) && length(B) > 1) {
     if (norm(B[[1]] - diag(nrow(B[[1]])), type="2") > 1e-8) {B <- c( list(diag(nrow(B[[1]]))), B )}
     if (simpleDelta) {  #Simple rho
-      return( ChooseK_parallel.multB.simrho( Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A=A, c=c, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit ) )
+      return( ChooseK_parallel.multB.simrho( Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A.lin=A, c.lin=c, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit ) )
     } else {
-      return( ChooseK_parallel.multB(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A=A, c=c, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit) )
+      return( ChooseK_parallel.multB(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A.lin=A, c.lin=c, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit) )
     }
   }
 }

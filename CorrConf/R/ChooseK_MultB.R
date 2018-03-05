@@ -4,7 +4,7 @@
 require(parallel)
 require(irlba)
 
-ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A=NULL, c=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
+ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=NULL, c.lin=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
   if (maxK < 1) {
     return(0)
   }
@@ -32,7 +32,7 @@ ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A=NULL, c=NULL
   n_cores <- max(detectCores() - 1, 1)
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
-  clusterExport(cl, c("Y", "B", "maxK", "A", "c", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
+  clusterExport(cl, c("Y", "B", "maxK", "A.lin", "c.lin", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
   out.parallel <- parSapply(cl=cl, 1:nFolds, XVal_K.multB)
   stopCluster(cl)
   
@@ -55,8 +55,8 @@ XVal_K.multB <- function(i) {
   Y.1 <- as.matrix(Y[folds.rows != i,]);    #Train with this data (estimate C)
   Y.0 <- as.matrix(Y[folds.rows == i,]);    #Test with these data
   
-  train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, A=A, c=c, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method="fast")
-  test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i, A=A, c=c)
+  train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, A=A.lin, c=c.lin, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method="fast")
+  test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i, A=A.lin, c=c.lin)
   
   return(test.loo.i$Loss)
 }
