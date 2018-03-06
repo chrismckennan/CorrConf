@@ -19,6 +19,7 @@ ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=F, A=NU
   }
   
   ##Multiple B matrices##
+  #Changed notation to A.lin and c.lin here because for some reason it was not working with just A and c. I need to come back to this
   if (is.list(B) && length(B) > 1) {
     if (norm(B[[1]] - diag(nrow(B[[1]])), type="2") > 1e-8) {B <- c( list(diag(nrow(B[[1]]))), B )}
     if (simpleDelta) {  #Simple rho
