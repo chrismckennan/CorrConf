@@ -106,7 +106,7 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A=NULL, c
       out.1 <- Optimize.Theta.multB(Y = Y, maxK = K, B = B, Cov = X, A=A, c=c, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
     }
     if (!is.null(X) && K > 0) {
-      out.1$C <- lapply(out.1$C, function(x, A) {if(is.null(x)) {return(NULL)}; return(A %*% x)}, A=Q.X)
+      out.1$C <- lapply(out.1$C, function(x, Q.X) {if(is.null(x)) {return(NULL)}; return(Q.X %*% x)}, Q.X=Q.X)
     }
     
     if (return.all) {
