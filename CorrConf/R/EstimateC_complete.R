@@ -79,7 +79,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A=NULL, c=NULL, Cpe
   if (simpleDelta && !is.null(B)) {
     Y2 <- Y %*% Q.X
     if (is.list(B)) {
-      out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, A=A, c=c, max.iter=1)
+      out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, A=A, c=c, max.iter=1, svd.method=svd.method)
       rho <- out.seq$Rho
       Delta.0 <- out.seq$Delta
     } else {
