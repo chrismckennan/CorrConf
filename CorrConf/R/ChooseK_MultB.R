@@ -4,7 +4,7 @@
 require(parallel)
 require(irlba)
 
-ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=NULL, c.lin=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
+ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=NULL, c.lin=NULL, D.ker=NULL, Var.0=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
   if (maxK < 1) {
     return(0)
   }
@@ -32,7 +32,7 @@ ChooseK_parallel.multB <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=NULL, c.
   n_cores <- max(detectCores() - 1, 1)
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
-  clusterExport(cl, c("Y", "B", "maxK", "A.lin", "c.lin", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
+  clusterExport(cl, c("Y", "B", "maxK", "A.lin", "c.lin", "D.ker", "Var.0", "tol.rho", "max.iter.rho", "svd.method", "folds.rows"), envir=environment())
   out.parallel <- parSapply(cl=cl, 1:nFolds, XVal_K.multB)
   stopCluster(cl)
   
@@ -55,15 +55,15 @@ XVal_K.multB <- function(i) {
   Y.1 <- as.matrix(Y[folds.rows != i,]);    #Train with this data (estimate C)
   Y.0 <- as.matrix(Y[folds.rows == i,]);    #Test with these data
   
-  train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, A=A.lin, c=c.lin, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method="fast")
-  test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i, A=A.lin, c=c.lin)
+  train.i <- Optimize.Theta.multB(Y=Y.1, maxK=maxK, B=B, Cov=NULL, A=A.lin, c=c.lin, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
+  test.loo.i <- Test.LOOXV.multB(Y.0=Y.0, B=B, train=train.i, A=A.lin, c=c.lin, D.ker=D.ker, Var.0=Var.0)
   
   return(test.loo.i$Loss)
 }
 
 
 ####This function performs leave-one-out cross validation on the held out genes after we have estimated C
-Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL) {
+Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL, D.ker=NULL, Var.0=NULL) {
   Rho <- NULL
   K <- train$K
   C.list <- train$C
@@ -76,8 +76,8 @@ Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL) {
   for (k in K) {
     if (k == 0) {
       if (is.null(Rho)) {
-        out.rho.k <- Est.Corr.multB(Y=SYY.0, B=B, simple.rho=T, A=A, c=c)
-        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k; Rho.previous[Rho.previous == 0] <- 0.05; Rho.previous[abs(Rho.previous) < 0.05] <- 0.05 * sign(Rho.previous[abs(Rho.previous) < 0.05])
+        out.rho.k <- Est.Corr.multB(Y=SYY.0, B=B, theta.0=Var.0, simple.rho=T, A=A, c=c, D.ker=D.ker)
+        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k
       }
       V.k <- CreateV(B = B, Rho = Rho.k); sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
       Y.k <- Y.0 %*% sqrt.Vinv.k
@@ -87,8 +87,8 @@ Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL) {
       C.k <- C.list[[k+1]]
       Q.k <- qr.Q(qr(C.k), complete=T)[,(k+1):n]
       if (is.null(Rho)) {
-        out.rho.k <- Est.Corr.multB(Y = t(Q.k) %*% SYY.0 %*% Q.k, B = lapply(B, function(x, Q.k){t(Q.k) %*% x %*% Q.k}, Q.k=Q.k), theta.0 = Rho.previous, simple.rho=T, A=A, c=c)
-        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k; Rho.previous[Rho.previous == 0] <- 0.05; Rho.previous[abs(Rho.previous) < 0.05] <- 0.05 * sign(Rho.previous[abs(Rho.previous) < 0.05])
+        out.rho.k <- Est.Corr.multB(Y = t(Q.k) %*% SYY.0 %*% Q.k, B = lapply(B, function(x, Q.k){t(Q.k) %*% x %*% Q.k}, Q.k=Q.k), theta.0 = Rho.previous, simple.rho=T, A=A, c=c, D.ker=D.ker)
+        Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k
       } else {
         Rho.k <- Rho
       }

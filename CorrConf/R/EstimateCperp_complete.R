@@ -4,9 +4,10 @@
 require(parallel)
 require(irlba)
 
-EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A=NULL, c=NULL, return.all=T, tol.rho=1e-3, max.iter.rho=15, svd.method="fast") {
+EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, return.all=T, tol.rho=1e-3, max.iter.rho=15, svd.method="fast") {
   if (is.list(B) && length(B) > 1) {
-    if (norm(B[[1]] - diag(nrow(B[[1]])), type="2") > 1e-8) {B <- c( list(diag(nrow(B[[1]]))), B )}
+    B <- IncludeIdent(B)
+    D.ker <- CreateD.ker(A.equ)
   }
   out <- list()
   out$K <- K
@@ -101,9 +102,9 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A=NULL, c
   ######Multiple B######
   if (is.list(B)) {
     if (simpleDelta) {   #Simple delta
-      out.1 <- Optimize.Theta.multB.simrho(SYY = 1/p*t(Y)%*%Y, maxK = K, B = B, Cov = X, A=A, c=c, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+      out.1 <- Optimize.Theta.multB.simrho(SYY = 1/p*t(Y)%*%Y, maxK = K, B = B, Cov = X, A=A.ine, c=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
     } else {   #Multiple delta
-      out.1 <- Optimize.Theta.multB(Y = Y, maxK = K, B = B, Cov = X, A=A, c=c, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+      out.1 <- Optimize.Theta.multB(Y = Y, maxK = K, B = B, Cov = X, A=A.ine, c=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
     }
     if (!is.null(X) && K > 0) {
       out.1$C <- lapply(out.1$C, function(x, Q.X) {if(is.null(x)) {return(NULL)}; return(Q.X %*% x)}, Q.X=Q.X)
