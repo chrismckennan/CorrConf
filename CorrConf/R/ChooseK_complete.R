@@ -5,7 +5,7 @@ ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=F, A.in
   
   ##No random effect, samples are uncorrelated##
   if (is.null(B)) {
-    return( ChooseK_NoB(Y=Y, X=Cov, maxK=maxK, nFolds=nFolds, simpleDelta=simpleDelta, max.iter.svd=3, svd.method="fast", plotit=plotit) )
+    return( ChooseK_NoB(Y=Y, X=Cov, maxK=maxK, nFolds=nFolds, simpleDelta=simpleDelta, max.iter.svd=3, svd.method=svd.method, plotit=plotit) )
   }
   
   ##One B matrix in random effect##
@@ -34,7 +34,8 @@ ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=F, A.in
 
 CreateD.ker <- function(A.equ) {
   if (is.null(A.equ)) { return(NULL) }
-  return(qr.Q(qr(t(A.equ)), complete=T)[,(nrow(A.equ)+1):ncol(A.equ)])
+  qr.X <- qr(t(rbind(A.equ)))
+  return(qr.Q(qr.X, complete=T)[,(qr.X$rank+1):ncol(A.equ)])
 }
 
 IncludeIdent <- function(B) {
