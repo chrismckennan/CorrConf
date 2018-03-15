@@ -27,7 +27,7 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, A=NULL, c=NULL, 
   #K > 0#
   Rho.0 <- out$Rho[1,]
   for (k in 1:maxK) {
-    out.k <- seq.PCA.multB.simrho(SYY=SYY, B=B, K=k, Rho.0=Rho.0, A=A, c=c, D.ker=D.ker, svd.method=svd.method)
+    out.k <- seq.PCA.multB.simrho(SYY=SYY, B=B, K=k, Rho.0=Rho.0, A=A, c=c, D.ker=D.ker, svd.method=svd.method, max.iter=max.iter.rho, tol.rho=tol.rho)
     Rho.0 <- out.k$Rho
     V.0 <- CreateV(B=B, Rho=Rho.0)
     out.sqrt.V <- sqrt.mat2(V.0); sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv

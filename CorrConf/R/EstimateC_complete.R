@@ -34,7 +34,11 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
     out.perp <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, A.ine=A.ine, c.ine=c.ine, A.equ=A.equ, Var.0=Var.0, return.all=return.all, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$Cperp <- out.perp$C
     if (return.all) {
-      Cperp <- out.perp$C[[K+1]]
+      if (!is.null(B)) {
+        Cperp <- out.perp$C[[K+1]]
+      } else {
+        Cperp <- out.perp$C
+      }
     } else {
       Cperp <- out.perp$C
     }

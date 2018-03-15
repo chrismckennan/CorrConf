@@ -13,7 +13,7 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{CorrConf}
 \packageIndices{CorrConf}
-~~ An overview of how to use the package, including the most important functions ~~
+This package first estimates the number of latent factors, K, using ChooseK. The user should then use this, or some K around the estimated K, to then estimate the latent factors, C, with EEstimateC_complete.
 }
 \author{
 \packageAuthor{CorrConf}
@@ -21,7 +21,7 @@ The DESCRIPTION file:
 Maintainer: \packageMaintainer{CorrConf}
 }
 \references{
-~~ Literature or other references for background information ~~
+A paper is on it's way...
 }
 ~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R documentation directory ~~
 \keyword{ package }
@@ -32,5 +32,5 @@ Maintainer: \packageMaintainer{CorrConf}
 ~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
 }
 \examples{
-~~ simple examples of the most important functions ~~
+
 }
