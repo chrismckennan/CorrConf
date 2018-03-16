@@ -5,14 +5,6 @@ Version: 2.1
 Date: 2018-03-07
 Author: Chris McKennan
 Maintainer: Chris McKennan <cgm29@uchicago.edu>
-Description: Estimates the unobserved n x K covariate matrix C in the model 
-    Y = BX^T + GammaZ^T + LC^T + E. Here Y (p x n), X (n x d) and Z (n x r)
-    are observed, where p is the number of units (i.e. genes), n is the sample
-    size, d is the number of covariates of interest (i.e. disease status) and
-    r is the number of nuisance covariates (like the intercept). In addition,
-    we assume the rows of E are independent of one another with first and
-    second moment (0, sigma_\{g,0\}^2 * I_n + sigma_\{g,1\}^2 * B_1 + ... +
-    sigma_\{g,b\}^2 * B_b) for g = 1,...,p, where the B_i's are observed psd
-    n x n matrices that describe the sample relatedness.
+Description: Estimates the unobserved n x K covariate matrix C
 Depends: parallel, irlba, turboEM
 License: GPL-2
