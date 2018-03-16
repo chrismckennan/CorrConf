@@ -37,7 +37,7 @@ A #Inequality-constraints x b matrix giving the inequality constraints on the va
 A #Inequality-constraints length vector, where A.ine tau >= c.ine. The default is c.ine = 0, and it is highly recommended the user not define anything else.
 }
   \item{A.equ}{
-A #equality-constraints x b matrix giving the equality constraints on the variance multipliers. If left unspecified, it defaults to assuming there are no equality constraints. If this is specified, a using MUST define \code{Var.0} and it must be in the feasible region.
+A #equality-constraints x b matrix giving the equality constraints on the variance multipliers. If left unspecified, it defaults to assuming there are no equality constraints. If this is specified, the user MUST define \code{Var.0} and it must be in the feasible region.
 }
   \item{Var.0}{
 A starting point for tau. If there are equality constraints, the user MUST specifiy a starting point within the feasible region.
