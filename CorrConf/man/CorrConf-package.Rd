@@ -9,11 +9,7 @@
 \packageDescription{CorrConf}
 }
 \details{
-
-The DESCRIPTION file:
-\packageDESCRIPTION{CorrConf}
-\packageIndices{CorrConf}
-~~ An overview of how to use the package, including the most important functions ~~
+The primary functions are ChooseK and EstimateC_complete
 }
 \author{
 \packageAuthor{CorrConf}
@@ -21,16 +17,15 @@ The DESCRIPTION file:
 Maintainer: \packageMaintainer{CorrConf}
 }
 \references{
-~~ Literature or other references for background information ~~
+A paper is coming...
 }
 
 \keyword{ package }
 \keyword{ Factor analysis }
 \keyword{ Correlation }
 \seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
+
 }
 \examples{
-~~ simple examples of the most important functions ~~
+
 }
