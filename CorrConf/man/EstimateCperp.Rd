@@ -5,7 +5,7 @@
 Estimate C.perp, the part of C orthogonal to X.
 }
 \description{
-Estimate C.perp, the part of C orthogonal to X. If the n x r matrix of nuisance covariates, Z, are specified, it returns the (n-r) x K matrix Q.Z' P_{X.perp} C.hat, where P_{X.perp} is the orthogonal projection onto the space orthogonal to X and Q.Z is the n x (n-r) matrix whose columns form an orthonormal basis for ker(Z').
+Estimate C.perp, the part of C orthogonal to X. If the n x r matrix of nuisance covariates, Z, are specified, it returns the (n-r) x K matrix Q.Z' P_\{X.perp\} C.hat, where P_\{X.perp\} is the orthogonal projection onto the space orthogonal to X and Q.Z is the n x (n-r) matrix whose columns form an orthonormal basis for ker(Z').
 }
 \usage{
 EstimateCperp(Y, K, X = NULL, Z = NULL, B = NULL, simpleDelta = F, A.ine = NULL, c.ine = NULL, A.equ = NULL, Var.0 = NULL, return.all = T, tol.rho = 0.001, max.iter.rho = 15, svd.method = "fast")
@@ -46,7 +46,7 @@ A starting point for tau. If there are equality constraints, the user MUST speci
 If \code{TRUE}, it returns all C.perp's with latent dimensions 1 up to K.
 }
   \item{tol.rho}{
-Each iteration of sequential PCA completes when || tau_j/||tau_j||_2 - tau_{j-1}/||tau_{j-2}||_2 ||_2 <= b * tol.rho
+Each iteration of sequential PCA completes when || tau_j/||tau_j||_2 - tau_\{j-1\}/||tau_\{j-2\}||_2 ||_2 <= b * tol.rho
 }
   \item{max.iter.rho}{
 Maximum number of iterations j for each sequential PCA iteration

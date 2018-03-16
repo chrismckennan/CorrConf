@@ -43,7 +43,7 @@ A #equality-constraints x b matrix giving the equality constraints on the varian
 A starting point for tau. If there are equality constraints, the user MUST specifiy a starting point within the feasible region.
 }
   \item{tol.rho}{
-Each iteration of sequential PCA completes when || tau_j/||tau_j||_2 - tau_{j-1}/||tau_{j-2}||_2 ||_2 <= b * tol.rho
+Each iteration of sequential PCA completes when || tau_j/||tau_j||_2 - tau_\{j-1\}/||tau_\{j-2\}||_2 ||_2 <= b * tol.rho
 }
   \item{max.iter.rho}{
 Maximum number of iterations j for each sequential PCA iteration

@@ -55,7 +55,7 @@ If \code{TRUE} and B has only ONE relatedness matrix, it estimates the variance 
 If \code{TRUE}, then it assumes Delta = delta^2 * I_p. Otherwise, Delta = diag(delta_1^2,...,delta_p^2). We recommend the user assign this \code{TRUE} for datasets with large p and n, i.e. methylation array data. Otherwise, the program will be prohibitively slow.
 }
   \item{tol.rho}{
-Each iteration of sequential PCA completes when || tau_j/||tau_j||_2 - tau_{j-1}/||tau_{j-2}||_2 ||_2 <= b * tol.rho
+Each iteration of sequential PCA completes when || tau_j/||tau_j||_2 - tau_\{j-1\}/||tau_\{j-2\}||_2 ||_2 <= b * tol.rho
 }
   \item{max.iter.rho}{
 Maximum number of iterations j for each sequential PCA iteration
@@ -76,7 +76,7 @@ A list
 \item{Z}{The n x r matrix of nuisance covariates}
 \item{Cperp}{A list of length K+1 who's entries contain the part of C orthogonal to X, with Z rotated out, when the image of C is assumed to have dimension k = 0,1,...,K}
 \item{rho}{A b x (K+1) matrix or (K+1) vector containing the normalized variance components for each B_i, i.e. tau/||tau||_2}
-\item{Omega.GLS}{The K x d bias-corrected estimate of CP_{Z.perp}X(X'P_{Z.perp}X)^{-1}, where P_{Z.perp} is the orthogonal project matrix onto the space orthogonal to Z}
+\item{Omega.GLS}{The K x d bias-corrected estimate of CP_\{Z.perp\}X(X'P_\{Z.perp\}X)^{-1}, where P_\{Z.perp\} is the orthogonal project matrix onto the space orthogonal to Z}
 \item{Omega.GLS.naive}{The K x d uncorrected version of Omega.GLS. This is NOT an accurate estimate and should only be used as a comparison to Omega.GLS}
 \item{C}{An estimate of the n x K matrix of latent factors.}
 \item{Bhat}{A p x d matrix containing the estimated effect of X on the gth unit's response, for g = 1,...,p. This is only returned when the relatedness matrices/list is \code{NULL} or when \code{return.Bhat=TRUE}.}
