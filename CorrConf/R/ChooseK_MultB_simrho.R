@@ -39,12 +39,12 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=N
   n_cores <- max(detectCores() - 1, 1)
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
-  clusterExport(cl, c("SYY", "B", "maxK", "A.lin", "c.lin", "D.ker", "Var.0", "tol.rho", "max.iter.rho", "svd.method", "folds.rows", "p"), envir=environment())
+  clusterExport(cl, c("SYY", "B", "maxK", "A.lin", "c.lin", "D.ker", "Var.0", "tol.rho", "max.iter.rho", "svd.method", "p"), envir=environment())
   out.parallel <- try(parSapply(cl=cl, Y.list, XVal_K.multB.simrho))
   stopCluster(cl)
   if (class(out.parallel) == "try-error") {
     cat("Error running in parallel. Running sequentially.\n")
-    out.parallel <- sapply(Y.list, XVal_K.multB.simrho)
+    out.parallel <- sapply(Y.list, XVal_K.multB.simrho.fail, SYY=SYY, B=B, maxK=maxK, A.lin=A.lin, c.lin=c.lin, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, p=p)
   }
   
   out$LOO.XV <- 1/n/p * apply(out.parallel, 1, sum)
@@ -61,6 +61,18 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=N
 ######The function to run in parallel######
 
 XVal_K.multB.simrho <- function(Y.test) {
+  Y.test <- as.matrix(Y.test)
+  p.1 <- nrow(Y.test)
+  p.0 <- p - p.1
+  
+  SYY.0 <- 1/p.0 * (p * SYY - t(Y.test) %*% Y.test)
+  
+  train.i <- Optimize.Theta.multB.simrho(SYY = SYY.0, maxK = maxK, B = as.list(B), A=A.lin, c=c.lin, D.ker=D.ker, Var.0=Var.0, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+  test.loo.i <- Test.LOOXV.multB(Y.0=Y.test, B=as.list(B), train=train.i, A=A.lin, c=c.lin, D.ker=D.ker, Var.0=Var.0)
+  return(test.loo.i$Loss)
+}
+
+XVal_K.multB.simrho.fail <- function(Y.test, SYY, B, maxK, A.lin, c.lin, D.ker, Var.0, tol.rho, max.iter.rho, svd.method, p) {
   Y.test <- as.matrix(Y.test)
   p.1 <- nrow(Y.test)
   p.0 <- p - p.1
