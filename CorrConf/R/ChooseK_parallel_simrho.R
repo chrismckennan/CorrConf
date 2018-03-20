@@ -82,7 +82,8 @@ Test.LOOXV.simrho <- function(Y.0, Lambda, train) {
   out$rho <- train$rho
   
   for (k in K) {
-    rho.k <- out$rho[k+1]   #I will instead use the training set rho's
+    #rho.k <- out$rho[k+1]   #I will instead use the training set rho's
+    rho.k <- 0.4457448
     if (k == 0) {
       #rho.k <- Optimize.rho.simdelta(Y = Y.0, Lambda = Lambda, rho.0 = seq(0, 0.95, by=0.05))$rho
       #rho.previous <- rho.k; rho.previous <- max(rho.previous, 0.05)
