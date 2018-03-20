@@ -84,7 +84,7 @@ Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL, D.ker=NULL, Var.0=NU
       #V.k <- CreateV(B = B, Rho = Rho.k); sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
       Y.k <- Y.0 %*% sqrt.Vinv.k
 
-      out$Loss[k+1] <- sum(Y.k^2)
+      out$Loss[k+1] <- sum(Y.k^2) + p.0*sum(log(svd(V.k)$d))
     } else {
       C.k <- C.list[[k+1]]
       #Q.k <- qr.Q(qr(C.k), complete=T)[,(k+1):n]
@@ -100,7 +100,7 @@ Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL, D.ker=NULL, Var.0=NU
       L.k <- Y.k %*% C.k %*% solve(t(C.k) %*% C.k)
       H.k <- apply(C.k, 1, function(x, Ak) {sum(x * (Ak %*% x))}, Ak=solve(t(C.k) %*% C.k))
       R.k <- Y.k - L.k %*% t(C.k)
-      out$Loss[k+1] <- sum( sweep(x = R.k, MARGIN = 2, 1/(1-H.k), FUN = "*")^2 )
+      out$Loss[k+1] <- sum( sweep(x = R.k, MARGIN = 2, 1/(1-H.k), FUN = "*")^2 ) + p.0*sum(log(svd(V.k)$d))
     }
   }
   return(out)
