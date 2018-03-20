@@ -85,6 +85,7 @@ Test.LOOXV.simrho <- function(Y.0, Lambda, train) {
     if (k == 0) {
       #rho.k <- Optimize.rho.simdelta(Y = Y.0, Lambda = Lambda, rho.0 = seq(0, 0.95, by=0.05))$rho
       rho.k <- train$rho[k+1] ######
+      rho.k <- 0.008392563  #Test
       V.k <- 1 + rho.k * (Lambda - 1)
       out$Loss[k+1] <- sum(sweep(Y.0, MARGIN = 2, 1/sqrt(V.k), "*")^2)
       #rho.previous <- rho.k; rho.previous <- max(rho.previous, 0.05)
@@ -94,6 +95,7 @@ Test.LOOXV.simrho <- function(Y.0, Lambda, train) {
       s.k <- svd(t(Q.k * Lambda) %*% Q.k)
       #rho.k <- Optimize.rho.simdelta(Y = Y.0 %*% Q.k %*% s.k$u, Lambda = s.k$d, rho.0 = rho.previous)$rho
       rho.k <- train$rho[k+1] ######
+      rho.k <- 0.008392563  #Test
       #rho.previous <- max(rho.k, 0.05)
       
       V.k <- 1 + rho.k * (Lambda - 1)
