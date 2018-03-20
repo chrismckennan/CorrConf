@@ -37,10 +37,14 @@ ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, ma
   cl <- makeCluster(n_cores)
   clusterExport(cl, c("SYY", "Lambda", "maxK", "p", "tol.rho", "max.iter.rho", "svd.method"), envir=environment())
   clusterEvalQ(cl, {library(irlba); library(CorrConf)})
-  out.parallel <- parSapply(cl=cl, Y.list, XVal_K.simrho)
+  #out.parallel <- parSapply(cl=cl, Y.list, XVal_K.simrho)
+  out.parallel <- parLapply(cl=cl, Y.list, XVal_K.simrho)
   stopCluster(cl)
   
-  out$LOO.XV <- 1/n/p * apply(out.parallel, 1, sum)
+  #out$LOO.XV <- 1/n/p * apply(out.parallel, 1, sum)
+  out$rho <- matrix(0, nrow=nFolds, ncol=maxK+1)
+  out$LOO.XV <- 0
+  for (i in 1:nFolds){ tmp <- out.parallel[[i]]; out$LOO.XV <- out$LOO.XV + 1/n/p*tmp$Loss; out$rho[i,] <- tmp$rho }
   out$K.hat <- out$K[which.min(out$LOO.XV)]
   if (plotit) {
     plot(out$K, out$LOO.XV, xlab="K", ylab="LOO-XV", main="Leave one out cross validation"); lines(out$K, out$LOO.XV)
@@ -62,7 +66,8 @@ XVal_K.simrho <- function(Y.test) {
   SYY.0 <- 1/p.0 * (p * SYY - t(Y.test) %*% Y.test)
   train.i <- Optimize.Theta.simrho(SYY = SYY.0, Lambda = Lambda, maxK = maxK, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
   test.loo.i <- Test.LOOXV.simrho(Y.0=Y.test, Lambda=Lambda, train=train.i)
-  return(test.loo.i$Loss)
+  #return(test.loo.i$Loss)
+  return(test.loo.i)
 }
 
 ###Leave one-out cross validation###
@@ -74,6 +79,7 @@ Test.LOOXV.simrho <- function(Y.0, Lambda, train) {
   p.0 <- nrow(Y.0)
   out <- list()
   out$Loss <- rep(0, length(K))
+  out$rho <- train$rho
   
   for (k in K) {
     if (k == 0) {
