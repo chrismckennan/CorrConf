@@ -85,7 +85,7 @@ https://github.com/chrismckennan/CorrConf
 ##--	or do  help(data=index)  for the standard data sets.
 
 ## The function is currently defined as
-function (Y, Cov = NULL, maxK = 20, B = NULL, nFolds = 10, simpleDelta = F, 
+function (Y, Cov = NULL, maxK = 20, B = NULL, nFolds = 10, simpleDelta = T, 
     A.ine = NULL, c.ine = NULL, A.equ = NULL, Var.0 = NULL, tol.rho = 0.001, 
     max.iter.rho = 15, svd.method = "fast", plotit = T) 
 {

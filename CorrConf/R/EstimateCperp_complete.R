@@ -111,13 +111,14 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A.ine=NUL
     }
     
     if (return.all) {
+      for (k in 0:K) {out.1$Rho[k+1,] <- out.1$Rho[k+1,]/sqrt(sum(out.1$Rho[k+1,]^2))}
       out$C <- out.1$C
       out$K <- 0:K
       out$rho <- out.1$Rho
       names(out$C) <- out$K; rownames(out$rho) <- out$K
     } else {
       out$C <- out.1$C[[K+1]]
-      out$rho <- out.1$Rho[K+1,]
+      out$rho <- out.1$Rho[K+1,]/sqrt(sum(out.1$Rho[K+1,]^2))
     }
     return(out)
   }
