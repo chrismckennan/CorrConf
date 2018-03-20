@@ -40,8 +40,12 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=N
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
   clusterExport(cl, c("SYY", "B", "maxK", "A.lin", "c.lin", "D.ker", "Var.0", "tol.rho", "max.iter.rho", "svd.method", "folds.rows", "p"), envir=environment())
-  out.parallel <- parSapply(cl=cl, Y.list, XVal_K.multB.simrho)
+  out.parallel <- try(parSapply(cl=cl, Y.list, XVal_K.multB.simrho))
   stopCluster(cl)
+  if (class(out.parallel) == "try-error") {
+    cat("Error running in parallel. Running sequentially.\n")
+    out.parallel <- sapply(Y.list, XVal_K.multB.simrho)
+  }
   
   out$LOO.XV <- 1/n/p * apply(out.parallel, 1, sum)
   out$K.hat <- out$K[which.min(out$LOO.XV)]
