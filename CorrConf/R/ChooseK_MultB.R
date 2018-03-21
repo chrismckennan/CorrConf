@@ -64,7 +64,6 @@ XVal_K.multB <- function(i) {
 
 ####This function performs leave-one-out cross validation on the held out genes after we have estimated C
 Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL, D.ker=NULL, Var.0=NULL) {
-  Rho <- NULL
   K <- train$K
   C.list <- train$C
   n <- ncol(Y.0)
@@ -74,32 +73,18 @@ Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL, D.ker=NULL, Var.0=NU
   out$Loss <- rep(0, length(K))
   
   for (k in K) {
-    Rho.k <- train$Rho[k+1,] / (1/n*sum(diag(CreateV(B = B, Rho = train$Rho[k+1,]))))
-    V.k <- CreateV(B = B, Rho = Rho.k)
+    V.k <- CreateV(B = B, Rho = train$Rho[k+1,])
     V.k <- exp(-1/n * sum(log(svd(V.k)$d))) * V.k; sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
     if (k == 0) {
-      #if (is.null(Rho)) {
-        #out.rho.k <- Est.Corr.multB(Y=SYY.0, B=B, theta.0=Var.0, simple.rho=T, A=A, c=c, D.ker=D.ker)
-        #Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k
-      #}
-      #V.k <- CreateV(B = B, Rho = Rho.k); sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
       Y.k <- Y.0 %*% sqrt.Vinv.k
-
       out$Loss[k+1] <- sum(Y.k^2)
     } else {
       C.k <- C.list[[k+1]]
-      #Q.k <- qr.Q(qr(C.k), complete=T)[,(k+1):n]
-      #if (is.null(Rho)) {
-        #out.rho.k <- Est.Corr.multB(Y = t(Q.k) %*% SYY.0 %*% Q.k, B = lapply(B, function(x, Q.k){t(Q.k) %*% x %*% Q.k}, Q.k=Q.k), theta.0 = Rho.previous, simple.rho=T, A=A, c=c, D.ker=D.ker)
-        #Rho.k <- out.rho.k$Rho; Rho.previous <- Rho.k
-      #} else {
-        #Rho.k <- Rho
-      #}
-      #V.k <- CreateV(B = B, Rho = Rho.k); sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
       Y.k <- Y.0 %*% sqrt.Vinv.k; C.k <- sqrt.Vinv.k %*% C.k
-
-      L.k <- Y.k %*% C.k %*% solve(t(C.k) %*% C.k)
-      H.k <- apply(C.k, 1, function(x, Ak) {sum(x * (Ak %*% x))}, Ak=solve(t(C.k) %*% C.k))
+      
+      SCC.k <- solve(t(C.k) %*% C.k)
+      L.k <- Y.k %*% C.k %*% SCC.k
+      H.k <- apply(C.k, 1, function(x, Ak) {sum(x * (Ak %*% x))}, Ak=SCC.k)
       R.k <- Y.k - L.k %*% t(C.k)
       out$Loss[k+1] <- sum( sweep(x = R.k, MARGIN = 2, 1/(1-H.k), FUN = "*")^2 )
     }

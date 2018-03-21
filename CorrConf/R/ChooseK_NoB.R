@@ -45,12 +45,12 @@ ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=
   
   out <- list()
   out$K <- seq(0, maxK)
-  out$Loss <- rowSums(out.parallel)/(n*p)
+  out$LOO.XV <- rowSums(out.parallel)/(n*p)
   if (plotit) {
-    plot(out$K, out$Loss, xlab="K.hat", ylab="LOO X-val")
-    points(out$K[which.min(out$Loss)], min(out$Loss), pch="x", col="red")
+    plot(out$K, out$LOO.XV, xlab="K.hat", ylab="LOO X-val")
+    points(out$K[which.min(out$LOO.XV)], min(out$LOO.XV), pch="x", col="red")
   }
-  out$K.hat <- out$K[which.min(out$Loss)]
+  out$K.hat <- out$K[which.min(out$LOO.XV)]
   return(out)
 }
 
