@@ -75,7 +75,8 @@ Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL, D.ker=NULL, Var.0=NU
   
   for (k in K) {
     Rho.k <- train$Rho[k+1,] / (1/n*sum(diag(CreateV(B = B, Rho = train$Rho[k+1,]))))
-    V.k <- CreateV(B = B, Rho = Rho.k); sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
+    V.k <- CreateV(B = B, Rho = Rho.k)
+    V.k <- exp(-1/n * sum(log(svd(V.k)$d))) * V.k; sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
     if (k == 0) {
       #if (is.null(Rho)) {
         #out.rho.k <- Est.Corr.multB(Y=SYY.0, B=B, theta.0=Var.0, simple.rho=T, A=A, c=c, D.ker=D.ker)
