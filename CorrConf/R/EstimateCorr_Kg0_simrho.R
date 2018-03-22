@@ -59,11 +59,11 @@ seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, A=NULL, c=NULL, D.ker=NULL, s
     sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv
     
     if (svd.method == "fast") {
-      s.0 <- irlba(A=sqrt.Vinv %*% SYY %*% sqrt.Vinv, nv = K, tol = 1/sqrt(n) * 1e-4)
+      s.0 <- eigen(sqrt.Vinv %*% SYY %*% sqrt.Vinv, symmetric = TRUE)
     } else {
-      s.0 <- svd(sqrt.Vinv %*% SYY %*% sqrt.Vinv)
+      s.0 <- eigen(sqrt.Vinv %*% SYY %*% sqrt.Vinv, symmetric = TRUE)
     }
-    C.0 <- sqrt.V %*% s.0$v[,1:K]
+    C.0 <- sqrt.V %*% s.0$vectors[,1:K]
     Q.C <- qr.Q(qr(C.0), complete=T)[,(K+1):n]
     
     out.rho.1 <- Est.Corr.multB(Y=t(Q.C) %*% SYY %*% Q.C, B=lapply(B, function(x, Q.C){t(Q.C) %*% x %*% Q.C}, Q.C=Q.C), theta.0=Rho.0, simple.rho=T, A=A, c=c, D.ker=D.ker)
