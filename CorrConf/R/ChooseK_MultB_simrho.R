@@ -44,7 +44,11 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=N
   stopCluster(cl)
   if (class(out.parallel) == "try-error") {
     cat("Error running in parallel. Running sequentially.\n")
-    out.parallel <- sapply(Y.list, XVal_K.multB.simrho.fail, SYY=SYY, B=B, maxK=maxK, A.lin=A.lin, c.lin=c.lin, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, p=p)
+    out.parallel <- matrix(0, nrow=maxK, ncol=nFolds)
+    for (i in 1:nFolds) {
+      out.parallel[,i] <- XVal_K.multB.simrho.fail(Y.test = Y.list[[i]], SYY=SYY, B=B, maxK=maxK, A.lin=A.lin, c.lin=c.lin, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, p=p)
+    }
+    #out.parallel <- sapply(Y.list, XVal_K.multB.simrho.fail, SYY=SYY, B=B, maxK=maxK, A.lin=A.lin, c.lin=c.lin, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, p=p)
   }
   
   out$LOO.XV <- 1/n/p * apply(out.parallel, 1, sum)
