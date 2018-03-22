@@ -54,7 +54,7 @@ seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, A=NULL, c=NULL, D.ker=NULL, s
   Rho.mat <- matrix(0, nrow=max.iter+1, ncol=b)
   Rho.mat[1,] <- Rho.0
   for (i in 1:max.iter) {
-    V.0 <- CreateV(B, Rho.0)
+    V.0 <- CreateV(B = B, Rho = Rho.0)
     out.sqrt.V <- sqrt.mat2(V.0)
     sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv
     
