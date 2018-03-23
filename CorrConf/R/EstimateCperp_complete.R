@@ -131,6 +131,7 @@ svd.wrapper <- function(x, nu=min(n,p), nv=min(n,p), symmetric=TRUE, LINPACK=FAL
   dx <- dim(x)
   n <- dx[1L]
   p <- dx[2L]
+  gotit <- F
   try({svdx <- svd(x, nu, nv); gotit <- T}, silent = T)
   if(gotit) {return(svdx)}
   try({svdtx <- svd(t(x), nv, nu); gotit <- T}, silent = T)
