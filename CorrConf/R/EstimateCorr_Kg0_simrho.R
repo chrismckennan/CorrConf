@@ -33,9 +33,9 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, A=NULL, c=NULL, 
     out.sqrt.V <- sqrt.mat2(V.0); sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv
     
     if (svd.method == "fast") {
-      out$C[[k+1]] <- sqrt(n) * qr.Q(qr(sqrt.V %*% cbind(eigen(sqrt.Vinv %*% SYY %*% sqrt.Vinv, symmetric = TRUE)$vectors[,1:k])))
+      out$C[[k+1]] <- sqrt(n) * qr.Q(qr(sqrt.V %*% cbind(svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=k)$v)))
     } else {
-      out$C[[k+1]] <- sqrt(n) * qr.Q(qr(sqrt.V %*% cbind(eigen(sqrt.Vinv %*% SYY %*% sqrt.Vinv, symmetric = TRUE)$vectors[,1:k])))
+      out$C[[k+1]] <- sqrt(n) * qr.Q(qr(sqrt.V %*% cbind(svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=k)$v)))
     }
     out$Rho[k+1,] <- Rho.0
   }
@@ -59,11 +59,11 @@ seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, A=NULL, c=NULL, D.ker=NULL, s
     sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv
     
     if (svd.method == "fast") {
-      s.0 <- eigen(sqrt.Vinv %*% SYY %*% sqrt.Vinv, symmetric = TRUE)
+      s.0 <- svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=K)
     } else {
-      s.0 <- eigen(sqrt.Vinv %*% SYY %*% sqrt.Vinv, symmetric = TRUE)
+      s.0 <- svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=K)
     }
-    C.0 <- sqrt.V %*% s.0$vectors[,1:K]
+    C.0 <- sqrt.V %*% s.0$v[,1:K]
     Q.C <- qr.Q(qr(C.0), complete=T)[,(K+1):n]
     
     out.rho.1 <- Est.Corr.multB(Y=t(Q.C) %*% SYY %*% Q.C, B=lapply(B, function(x, Q.C){t(Q.C) %*% x %*% Q.C}, Q.C=Q.C), theta.0=Rho.0, simple.rho=T, A=A, c=c, D.ker=D.ker)

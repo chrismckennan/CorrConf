@@ -123,3 +123,26 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A.ine=NUL
     return(out)
   }
 }
+
+svd.wrapper <- function(x, nu=min(n,p), nv=min(n,p), symmetric=TRUE, LINPACK=FALSE) {
+  x <- as.matrix(x)
+  dx <- dim(x)
+  n <- dx[1L]
+  p <- dx[2L]
+  try({svdx <- svd(x, nu, nv); gotit <- T}, silent = T)
+  if(gotit) {return(svdx)}
+  try({svdtx <- svd(t(x), nv, nu); gotit <- T}, silent = T)
+  if (gotit) {
+    temp <- svdtx$u
+    svdtx$u <- svdtx$v
+    svdtx$v = temp
+    return(svdtx)
+  }
+  if (n == p && symmetric) {
+    try({temp <- eigen(x, symmetric=symmetric); gotit <- T}, silent = T)
+    if (gotit) {return(list(u=temp$vectors, v=temp$vectors, d=temp$values))}
+    try({temp <- eigen(t(x), symmetric=symmetric); gotit <- T}, silent = T)
+    if (gotit) {return(list(u=temp$vectors, v=temp$vectors, d=temp$values))}
+  }
+  stop("SVD failed")
+}
