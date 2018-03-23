@@ -43,7 +43,7 @@ mll.multB <- function(theta, Y, B, D.ker, mean.shift) {
   b <- length(rho)
   
   V <- CreateV(B, rho)
-  s.V <- svd(V)
+  s.V <- svd.wrapper(V)
   Y.tilde <- Y %*% s.V$u
   YVinvYt <- rowSums( sweep(Y.tilde, 2, 1/s.V$d, FUN="*") * Y.tilde )
   return( 1/n*sum(log(s.V$d)) + 1/p*sum(log(1/n*YVinvYt)) )
@@ -55,7 +55,7 @@ mll.multB.simrho <- function(theta, SYY, B, D.ker, mean.shift) {
   b <- length(rho)
   
   V <- CreateV(B, rho)
-  s.V <- svd(V)
+  s.V <- svd.wrapper(V)
   SYY.tilde <- rowSums((t(s.V$u) %*% SYY) * t(s.V$u))
   return( 1/n * sum(log(s.V$d)) + log(1/n * sum( SYY.tilde / s.V$d )) )
 }
