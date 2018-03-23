@@ -74,7 +74,7 @@ Test.LOOXV.multB <- function(Y.0, B, train, A=NULL, c=NULL, D.ker=NULL, Var.0=NU
   
   for (k in K) {
     V.k <- CreateV(B = B, Rho = train$Rho[k+1,])
-    V.k <- exp(-1/n * sum(log(svd(V.k)$d))) * V.k; sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
+    V.k <- exp(-1/n * sum(log(svd.wrapper(V.k)$d))) * V.k; sqrt.Vinv.k <- sqrt.mat2(V.k)$Rinv
     if (k == 0) {
       Y.k <- Y.0 %*% sqrt.Vinv.k
       out$Loss[k+1] <- sum(Y.k^2)

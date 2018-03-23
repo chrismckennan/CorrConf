@@ -33,9 +33,9 @@ Optimize.Theta.multB.simrho <- function(SYY, maxK, B, Cov=NULL, A=NULL, c=NULL, 
     out.sqrt.V <- sqrt.mat2(V.0); sqrt.V <- out.sqrt.V$R; sqrt.Vinv <- out.sqrt.V$Rinv
     
     if (svd.method == "fast") {
-      out$C[[k+1]] <- sqrt(n) * qr.Q(qr(sqrt.V %*% cbind(svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=k)$v)))
+      out$C[[k+1]] <- sqrt(n) * cbind(qr.Q(qr(sqrt.V %*% cbind(svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=k)$v))))
     } else {
-      out$C[[k+1]] <- sqrt(n) * qr.Q(qr(sqrt.V %*% cbind(svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=k)$v)))
+      out$C[[k+1]] <- sqrt(n) * cbind(qr.Q(qr(sqrt.V %*% cbind(svd.wrapper(sqrt.Vinv %*% SYY %*% sqrt.Vinv, nu=0, nv=k)$v))))
     }
     out$Rho[k+1,] <- Rho.0
   }

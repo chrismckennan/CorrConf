@@ -10,7 +10,7 @@ Optimize.Theta.full <- function(Y, K, B, Cov=NULL, tol.rho=1e-3, max.iter.rho=15
     Y <- Y %*% Q.Cov
     B <- t(Q.Cov) %*% B %*% Q.Cov
   }
-  s.B <- svd(B)
+  s.B <- svd.wrapper(B)
   out <- Optimize.Theta(Y=Y %*% s.B$u, K=K, B=s.B$d, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
   if (!is.null(Cov)) {
     tmp <- Q.Cov %*% s.B$u
@@ -33,7 +33,7 @@ Optimize.Theta <- function(Y, K, B, Cov=NULL, tol.rho=1e-3, max.iter.rho=15, svd
     Q <- qr.Q(qr(Cov), complete=T)[,(ncol(Cov)+1):nrow(Cov)]
     Y <- Y %*% Q    #No more covariates
     B <- t(Q) %*% B %*% Q
-    svd.B <- svd(B)
+    svd.B <- svd.wrapper(B)
     Lambda <- as.vector(svd.B$d)
     U <- svd.B$u
     Y <- Y %*% U      #Y now has uncorrelated columns
@@ -41,7 +41,7 @@ Optimize.Theta <- function(Y, K, B, Cov=NULL, tol.rho=1e-3, max.iter.rho=15, svd
     if (is.vector(B)) {
       Lambda <- B
     } else {
-      svd.B <- svd(B)
+      svd.B <- svd.wrapper(B)
       Lambda <- as.vector(svd.B$d)
       U <- svd.B$u
       Y <- Y %*% U    #Y now has uncorrelated columns   
@@ -75,16 +75,16 @@ Optimize.Theta <- function(Y, K, B, Cov=NULL, tol.rho=1e-3, max.iter.rho=15, svd
     if (return.C) {
       if (is.vector(B)) {
         if (svd.method == "fast") {
-        	out$C[[k+1]] <- sqrt(n) * svd( irlba(A=Y.stand, nv = k, tol = 1/sqrt(n) * 1e-4)$v * sqrt(1 + out$rho[k+1]*(Lambda-1)) )$u   #Q'\hat{C}
+          out$C[[k+1]] <- sqrt(n) * cbind(qr.Q(qr( svd.wrapper(Y.stand, nu=0, nv=k)$v[,1:k] * sqrt(1 + out$rho[k+1]*(Lambda-1)) )))   #Q'\hat{C}
         } else {
-        	out$C[[k+1]] <- sqrt(n) * svd( svd(Y.stand)$v[,1:k] * sqrt(1 + out$rho[k+1]*(Lambda-1)) )$u   #Q'\hat{C}
+          out$C[[k+1]] <- sqrt(n) * cbind(qr.Q(qr( svd.wrapper(Y.stand, nu=0, nv=k)$v[,1:k] * sqrt(1 + out$rho[k+1]*(Lambda-1)) )))   #Q'\hat{C}
         }
       } else {
-      	if (svd.method == "fast") {
-      		out$C[[k+1]] <- sqrt(n) * U %*% svd( irlba(A=Y.stand, nv = k, tol = 1/sqrt(n) * 1e-4)$v * sqrt(1 + out$rho[k+1]*(Lambda-1)) )$u   #Q'\hat{C}
-      	} else {
-      		out$C[[k+1]] <- sqrt(n) * U %*% svd( svd(Y.stand)$v[,1:k] * sqrt(1 + out$rho[k+1]*(Lambda-1)) )$u   #Q'\hat{C}
-      	}
+        if (svd.method == "fast") {
+          out$C[[k+1]] <- sqrt(n) * U %*% qr.Q(qr( svd.wrapper(Y.stand, nu=0, nv=k)$v[,1:k] * sqrt(1 + out$rho[k+1]*(Lambda-1)) ))   #Q'\hat{C}
+        } else {
+          out$C[[k+1]] <- sqrt(n) * U %*% qr.Q(qr( svd.wrapper(Y.stand, nu=0, nv=k)$v[,1:k] * sqrt(1 + out$rho[k+1]*(Lambda-1)) ))   #Q'\hat{C}
+        }
       }
       
     }
@@ -105,7 +105,7 @@ seq.PCA <- function(Y, K, B, Cov=NULL, Delta.0=NULL, rho.0, tol=1e-3, max.iter=1
     Q.cov <- qr.Q(qr(Cov), complete=T)[,(ncol(Cov)+1):nrow(Cov)]
     Y <- Y %*% Q.cov
     B <- t(Q.cov) %*% B %*% Q.cov
-    svd.B <- svd(B)
+    svd.B <- svd.wrapper(B)
     U.cov <- svd.B$u
     Lambda.cov <- svd.B$d
     Y.bar <- Y %*% U.cov
@@ -114,7 +114,7 @@ seq.PCA <- function(Y, K, B, Cov=NULL, Delta.0=NULL, rho.0, tol=1e-3, max.iter=1
       Y.bar <- Y
       Lambda.cov <- B
     } else {
-      svd.B <- svd(B)
+      svd.B <- svd.wrapper(B)
       U.cov <- svd.B$u
       Lambda.cov <- svd.B$d
       Y.bar <- Y %*% U.cov    #I do everything with respect to Y.bar (i.e. Y.bar is the new Y)
@@ -134,13 +134,13 @@ seq.PCA <- function(Y, K, B, Cov=NULL, Delta.0=NULL, rho.0, tol=1e-3, max.iter=1
     V.0 <- 1 + rho.0 * (Lambda.cov - 1)
     Y.tilde.0 <- sweep(Y.bar / sqrt(Delta.0), MARGIN = 2, 1/sqrt(V.0), FUN="*")
     if (svd.method == "fast") {
-      s.0 <- irlba(A=Y.tilde.0, nv = K, tol = 1/sqrt(n) * 1e-4)
+      s.0 <- svd.wrapper(Y.tilde.0, nu=0, nv=K)
     } else {
-      s.0 <- svd(Y.tilde.0)
+      s.0 <- svd.wrapper(Y.tilde.0, nu=0, nv=K)
     }
     Chat <- sqrt(n) * (cbind(s.0$v[,1:K]) * sqrt(V.0))
     Q.Chat <- qr.Q(qr(Chat), complete=T)[,(K+1):n]
-    svd.QCtBQC <- svd(t(Q.Chat * Lambda.cov) %*% Q.Chat)
+    svd.QCtBQC <- svd.wrapper(t(Q.Chat * Lambda.cov) %*% Q.Chat)
     
     #Update rho#
     Y.update <- Y.bar %*% Q.Chat %*% svd.QCtBQC$u

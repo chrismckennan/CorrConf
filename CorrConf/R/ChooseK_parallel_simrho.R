@@ -13,7 +13,7 @@ ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, ma
     B <- t(Q) %*% B %*% Q
     Y <- Y %*% Q
   }
-  s.B <- svd(B)
+  s.B <- svd.wrapper(B)
   Y <- Y %*% s.B$u
   Lambda <- s.B$d
   
@@ -50,7 +50,7 @@ ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, ma
     plot(out$K, out$LOO.XV, xlab="K", ylab="LOO-XV", main="Leave one out cross validation"); lines(out$K, out$LOO.XV)
     points(out$K.hat, min(out$LOO.XV), pch="x", col="red")
   }
-
+  
   return(out)
 }
 
@@ -84,7 +84,7 @@ Test.LOOXV.simrho <- function(Y.0, Lambda, train) {
   for (k in K) {
     rho.k <- out$rho[k+1]   #I will instead use the training set rho's
     V.k <- 1 + rho.k * (Lambda - 1)
-    V.k <- exp(-1/n * sum(log(V.k))) * V.k   #Ensure 1/n*log|V.k| = 0
+    V.k <- exp(-1/n * sum(log(V.k))) * V.k   #Ensure log|V.k| = 0
     if (k == 0) {
       out$Loss[k+1] <- sum(sweep(Y.0, MARGIN = 2, 1/sqrt(V.k), "*")^2)
     } else {
@@ -100,4 +100,4 @@ Test.LOOXV.simrho <- function(Y.0, Lambda, train) {
   }
   return(out)
 }
-  
+

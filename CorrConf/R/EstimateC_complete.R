@@ -77,7 +77,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
   n <- ncol(Y)
   d <- ncol(X)
   Q.X <- qr.Q(qr(X), complete = T)[,(d+1):n]
-
+  
   if (K == 0) {simpleDelta <- F}
   
   ##Perform 1 iteration of sequential PCA if simpleDelta is TRUE##
@@ -97,9 +97,9 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
     sqrt.V.tilde <- sqrt.mat(V.tilde.inv)
     Y2 <- Y2 %*% sqrt.V.tilde
     if (svd.method=="fast") {
-      Cperp <- sqrt(n) * cbind(svd(sqrt.mat(V.tilde) %*% cbind(irlba(A=Y2 / sqrt(Delta.0), nv = K, tol = 1/sqrt(n) * 1e-4)$v[,1:K]))$u)
+      Cperp <- sqrt(n) * cbind(qr(qr.Q( sqrt.mat(V.tilde) %*% cbind(svd.wrapper(Y2 / sqrt(Delta.0), nv=K, nu=0)$v[,1:K]) )))
     } else {
-      Cperp <- sqrt(n) * cbind(svd(sqrt.mat(V.tilde) %*% cbind(svd(Y2 / sqrt(Delta.0), nv=K)$v[,1:K]))$u)
+      Cperp <- sqrt(n) * cbind(qr(qr.Q( sqrt.mat(V.tilde) %*% cbind(svd.wrapper(Y2 / sqrt(Delta.0), nv=K, nu=0)$v[,1:K]) )))
     }
     Cperp <- Q.X %*% Cperp
     if (return.all) {

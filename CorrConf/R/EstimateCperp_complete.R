@@ -126,10 +126,10 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A.ine=NUL
 
 ###Wrapper for SVD###
 
-svd.wrapper <- function(x, nu=min(n,p), nv=min(n,p), symmetric=TRUE, LINPACK=FALSE) {
+svd.wrapper <- function(x, nu=min(n,p), nv=min(n,p), symmetric=TRUE) {
   x <- as.matrix(x)
   dx <- dim(x)
-  n <- dx[1L]
+  n <- dx[1L]   #x is n x p
   p <- dx[2L]
   gotit <- F
   try({svdx <- svd(x, nu, nv); gotit <- T}, silent = T)
@@ -138,7 +138,7 @@ svd.wrapper <- function(x, nu=min(n,p), nv=min(n,p), symmetric=TRUE, LINPACK=FAL
   if (gotit) {
     temp <- svdtx$u
     svdtx$u <- svdtx$v
-    svdtx$v = temp
+    svdtx$v <- temp
     return(svdtx)
   }
   if (n == p && symmetric) {

@@ -16,7 +16,7 @@ ChooseK_parallel <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, max.it
     B <- t(Q) %*% B %*% Q
     Y <- Y %*% Q
   }
-  s.B <- svd(B)
+  s.B <- svd.wrapper(B)
   Y <- Y %*% s.B$u
   Lambda <- s.B$d
   
@@ -88,7 +88,7 @@ Test.LOOXV <- function(Y.0, Lambda, train) {
     } else {
       C.k <- C.list[[k+1]]
       Q.k <- qr.Q(qr(C.k), complete=T)[,(k+1):n]
-      s.k <- svd(t(Q.k * Lambda) %*% Q.k)
+      s.k <- svd.wrapper(t(Q.k * Lambda) %*% Q.k)
       rho.k <- optimize.rho.K0(Y = Y.0 %*% Q.k %*% s.k$u, eigs.K = s.k$d, rho.start = rho.previous)$rho
       rho.previous <- rho.k; rho.previous <- max(rho.previous, 0.05)
       

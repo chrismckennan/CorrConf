@@ -10,7 +10,7 @@ Optimize.Theta.simrho.full <- function(SYY, X=NULL, B, maxK, tol.rho=1e-3, max.i
     B <- t(Q) %*% B %*% Q
     SYY <- t(Q) %*% SYY %*% Q
   }
-  s.B <- svd(B)
+  s.B <- svd.wrapper(B)
   out <- Optimize.Theta.simrho(SYY = t(s.B$u) %*% SYY %*% s.B$u, Lambda=s.B$d, maxK=maxK, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
   if (!is.null(X)) {
     tmp <- Q %*% s.B$u
@@ -45,9 +45,9 @@ Optimize.Theta.simrho <- function(SYY, Lambda, maxK, tol.rho=1e-3, max.iter.rho=
     V.k <- 1 + out$rho[k+1]*(Lambda-1)
     SYY.stand <-  sweep( SYY / sqrt(V.k), MARGIN = 2, 1/sqrt(V.k), FUN = "*" )
     if (svd.method == "fast") {
-      out$C[[k+1]] <- sqrt(n) * svd( irlba(A=SYY.stand, nv = k, tol = 1/sqrt(n) * 1e-4)$v * sqrt(V.k) )$u
+      out$C[[k+1]] <- sqrt(n) * cbind(qr.Q(qr(svd.wrapper(SYY.stand, nu = 0, nv = k)$v * sqrt(V.k))))
     } else {
-      out$C[[k+1]] <- sqrt(n) * svd( svd(SYY.stand, nv = k, nu = k)$v * sqrt(V.k) )$u
+      out$C[[k+1]] <- sqrt(n) * cbind(qr.Q(qr(svd.wrapper(SYY.stand, nu = 0, nv = k)$v * sqrt(V.k))))
     }
   }
   return(out)
@@ -62,13 +62,13 @@ seq.PCA.simrho <- function(SYY, K, Lambda, rho.0, tol=1e-3, max.iter=15, svd.met
     V.0 <- 1 + rho.0 * (Lambda - 1)
     SYY.tilde <- sweep(SYY / sqrt(V.0), MARGIN = 2, 1/sqrt(V.0), FUN = "*")
     if (svd.method == "fast") {
-      s <- irlba(A=SYY.tilde, nv=K, tol = 1/sqrt(n) * 1e-4)
+      s <- svd.wrapper(SYY.tilde, nu=0, nv=K)
     } else {
-      s <- svd(SYY.tilde)
+      s <- svd.wrapper(SYY.tilde, nu=0, nv=K)
     }
     Chat <- sqrt(n) * (cbind(s$v[,1:K]) * sqrt(V.0))
     Q.Chat <- qr.Q(qr(Chat), complete=T)[,(K+1):n]
-    svd.QCtBQC <- svd(t(Q.Chat * Lambda) %*% Q.Chat)
+    svd.QCtBQC <- svd.wrapper(t(Q.Chat * Lambda) %*% Q.Chat)
     
     #update rho#
     tmp <- Q.Chat %*% svd.QCtBQC$u
