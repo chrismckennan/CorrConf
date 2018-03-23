@@ -85,13 +85,13 @@ seq.PCA.multB <- function(Y, B, K, Rho.0, Delta.0=NULL, A=NULL, c=NULL, D.ker=NU
 }
 
 sqrt.mat2 <- function(X) {  #R^2 = X
-  s <- eigen(X, symmetric=T)
-  return( list(R=sweep(s$vectors, 2, sqrt(s$values), "*") %*% t(s$vectors), Rinv=sweep(s$vectors, 2, 1/sqrt(s$values), "*") %*% t(s$vectors) ) )
+  s <- svd.wrapper(X)
+  return( list(R=sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u), Rinv=sweep(s$u, 2, 1/sqrt(s$d), "*") %*% t(s$u) ) )
 }
 
 sqrt.mat <- function(X) {
-  s <- eigen(X, symmetric=T)
-  return(sweep(s$vectors, 2, sqrt(s$values), "*") %*% t(s$vectors))
+  s <- svd.wrapper(X)
+  return(sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u))
 }
 
 CreateV <- function(B, Rho) {
