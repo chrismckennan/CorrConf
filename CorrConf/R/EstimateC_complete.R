@@ -97,9 +97,9 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
     sqrt.V.tilde <- sqrt.mat(V.tilde.inv)
     Y2 <- Y2 %*% sqrt.V.tilde
     if (svd.method=="fast") {
-      Cperp <- sqrt(n) * cbind(qr(qr.Q( sqrt.mat(V.tilde) %*% cbind(svd.wrapper(Y2 / sqrt(Delta.0), nv=K, nu=0)$v[,1:K]) )))
+      Cperp <- sqrt(n) * cbind(qr.Q(qr( sqrt.mat(V.tilde) %*% cbind(svd.wrapper(Y2 / sqrt(Delta.0), nv=K, nu=0)$v[,1:K]) )))
     } else {
-      Cperp <- sqrt(n) * cbind(qr(qr.Q( sqrt.mat(V.tilde) %*% cbind(svd.wrapper(Y2 / sqrt(Delta.0), nv=K, nu=0)$v[,1:K]) )))
+      Cperp <- sqrt(n) * cbind(qr.Q(qr( sqrt.mat(V.tilde) %*% cbind(svd.wrapper(Y2 / sqrt(Delta.0), nv=K, nu=0)$v[,1:K]) )))
     }
     Cperp <- Q.X %*% Cperp
     if (return.all) {
