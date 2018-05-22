@@ -1,5 +1,5 @@
-require(irlba)
-require(parallel)
+library(irlba)
+library(parallel)
 
 ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=3, svd.method="fast", plotit=T) {
   if (maxK < 1) {
@@ -74,7 +74,7 @@ XVal_K.noB.simrho <- function(Y.i) {
   if (svd.method == "fast") {
     s.i <- irlba(A=pSYY.i, nv=maxK, tol=1/sqrt(n.i)*1e-4)
   } else {
-    s.i <- svd(pSYY.i)
+    s.i <- svd(pSYY.i, nv=maxK)
   }
   train.i <- list()
   train.i$C <- vector(mode="list", length=maxK)
@@ -123,13 +123,13 @@ Train.noB <- function(Y, maxK, max.iter.svd=3, svd.method="fast") {
         if (svd.method=="fast") {
           s.ki <- irlba(A=Y, nv=k, tol=1/sqrt(n)*1e-4)
         } else {
-          s.ki <- svd(Y)
+          s.ki <- svd(Y, nv=k)
         }
       } else {
         if (svd.method=="fast") {
           s.ki <- irlba(A=Y/sqrt(Sigma), nv=k, tol=1/sqrt(n)*1e-4)
         } else {
-          s.ki <- svd(Y/sqrt(Sigma))
+          s.ki <- svd(Y/sqrt(Sigma), nv=k)
         }        
       }
       C.ki <- cbind(s.ki$v[,1:k])

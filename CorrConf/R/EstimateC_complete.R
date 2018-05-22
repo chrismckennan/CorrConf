@@ -44,6 +44,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
     }
     if (is.null(rho)) {
       out$rho <- out.perp$rho
+      #out$rho <- t( apply( cbind(out$rho), 1, function(x){V.tmp <- EstimateV.complete(x,B); return( exp(-1/nrow(V.tmp) * sum(log(svd(V.tmp)$d))) * x )} ) )
       if (return.all){
         if (is.matrix(out.perp$rho)) {
           rho <- out.perp$rho[K+1,]

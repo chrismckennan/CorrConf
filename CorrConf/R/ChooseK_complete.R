@@ -1,7 +1,7 @@
-require(parallel)
-require(irlba)
+library(parallel)
+library(irlba)
 
-ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=T, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, tol.rho=1e-3, max.iter.rho=15, svd.method="fast", plotit=T) {
+ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=T, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, tol.rho=1e-3, max.iter.rho=15, svd.method="slow", plotit=T) {
   
   ##No random effect, samples are uncorrelated##
   if (is.null(B)) {
