@@ -1,8 +1,8 @@
 #######This estimates K uses cross validation#######
 #It does estimation and testing on the folds in parallel
 
-require(parallel)
-require(irlba)
+library(parallel)
+library(irlba)
 
 ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=NULL, c.lin=NULL, D.ker=NULL, Var.0=NULL, tol.rho=1e-3, max.iter.rho=10, svd.method="fast", plotit=T) {
   if (maxK < 1) {

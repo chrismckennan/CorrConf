@@ -1,5 +1,5 @@
 # CorrConf
-Estimate latent covariates in high dimensional data when individual samples are correlated (i.e. related).
+Estimate latent covariates in high dimensional data when individual samples are correlated (i.e. related). This package is also applicable when samples are independent.
 
 ## Model description
 The complete model for the data is Y = B X^T + Gamma Z^T + L C^T + E, where:
@@ -12,6 +12,5 @@ C is a n x K matrix of latent covariates to be estimated. One can then do infere
 	This package estimates K and then estimates C in the presence of correlated residuals.
 
 ## Package functions
-ChooseK: Estimate the number of columns in C
-EstimateCperp: Estimate the potion of C orthogonal to the design matrix, X
-EstimateC_complete: Estimate the unobserved n x K covariate matrix C. This can be used in downstream software to do inference on B, the effects due to X.
+ChooseK: Estimate K, the number of columns in C. This function is also applicable for data with independent samples. See documentation for details.
+EstimateC_complete: Estimate the unobserved n x K covariate matrix C. This can be used in downstream software to do inference on B, the effects due to X. If "return.Bhat" is set to TRUE, the software will return the GLS estimate for B and p-values under the model Y ~ MN{ BX^T + Gamma Z^T + LC^T, diag(delta_1^2,...,delta_p^2), V}, where V is a linear combination of the matrices B_1,...,B_b. If samples are independent and K is known, we recommend the user use the package BCconf, which is available for download at https://github.com/chrismckennan/BCconf.

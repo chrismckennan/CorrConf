@@ -84,16 +84,35 @@ seq.PCA.multB <- function(Y, B, K, Rho.0, Delta.0=NULL, A=NULL, c=NULL, D.ker=NU
   return(list(Rho=Rho.0, Delta=out.rho.1$Delta, all.Rho=Rho.mat, out=0))
 }
 
+#' Compute the square-root and inverse square-root of a symmetric, positive semi-definite matrix
+#'
+#' @param X An \code{n} x \code{n} symmetric psd matrix
+#'
+#' @return A list \item{R}{An \code{n} x \code{n} matrix; R\%*\%R = X} \item{Rinv}{An \code{n} x \code{n} matrix; Rinv\%*\%Rinv = X^\{-1\}}
+#' @export
 sqrt.mat2 <- function(X) {  #R^2 = X
   s <- svd.wrapper(X)
   return( list(R=sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u), Rinv=sweep(s$u, 2, 1/sqrt(s$d), "*") %*% t(s$u) ) )
 }
 
+#' Compute the square-root of a symmetric, positive semi-definite matrix
+#'
+#' @param X An \code{n} x \code{n} symmetric psd matrix
+#'
+#' @return A matrix V such that V\%*\%V = X
+#' @export
 sqrt.mat <- function(X) {
   s <- svd.wrapper(X)
   return(sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u))
 }
 
+#' Create a covariance matrix V from a list of matrices
+#'
+#' @param B A list of positive semi-definite matrices
+#' @param Rho A vector of variance multipliers. length(B) = length(Rho)
+#'
+#' @return A covariance matrix
+#' @export
 CreateV <- function(B, Rho) {
   n <- ncol(B[[1]])
   V <- matrix(0, nrow=n, ncol=n)

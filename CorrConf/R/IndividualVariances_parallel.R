@@ -1,4 +1,4 @@
-require(turboEM)
+#require(turboEM)
 require(parallel)
 #########Run Turbo EM#########
 

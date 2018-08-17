@@ -1,12 +1,41 @@
 ##This estimates the complete C, which can be used to do inference on the effect of X on Y##
 
-require(irlba)
-require(parallel)
+library(irlba)
+library(parallel)
 
-EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
+#' Estimate \code{C} for a given value of \code{K}
+#'
+#' Estimate \code{C} for a given value of \code{K}. The user can also estimate Beta, the effect due to the covariates of interest by specifying \code{return.Bhat=T}.
+#'
+#' @param Y A \code{p} x \code{n} (number genes/methylation sites x sample size) matrix of observed expression/methylation
+#' @param K The dimension of the column space of C (i.e. C is a n x K matrix). This should be estimated with ChooseK.
+#' @param X A \code{n} x \code{d} design matrix of covariates of interest (i.e. disease status)
+#' @param Z A \code{n} x \code{r} design matrix of nuisance covariates (i.e. known technical factors and the intercept). The default is NONE.
+#' @param B A list of \code{n} x \code{n} positive semidefinite matrices that determine the correlation structure between samples. For example, these can be kinship matrices, partition matrices that group samples by blocks, diagonal matrices with 0's or 1's along the diagonal grouping samples that have the same residual variance, etc. The software automatically includes the identity if it is not in the span of the user-provided matrices. The default is to treat all samples as independent with the same residual variance.
+#' @param A.ine A #inequality constaints x b matrix, where b = length(B) = num. variance components. \code{A.ine \%*\% tau >= 0}, where tau = (tau_1^2,...,tau_b^2) are the variance multipliers. The default is all variance multipliers are greater than 0.
+#' @param c.ine A #inequality constraints vector, where \code{A.ine \%*\% tau - c.ine >= 0}. It is highly recommended users do NOT input anything other than \code{0}. Defaults to \code{0}.
+#' @param A.equ A #equality constraints x b matrix, where \code{A.equ \%*\% tau = 0}. Defaults to no equality constraints.
+#' @param Var.0 A length \code{b} starting point for tau. If A.equ is specified, this MUST be specified to ensure subsequent iterations lie in the feasible region. Otherwise, the user need not specify a starting point.
+#' @param Cperp Should be left as NULL. Default is NULL
+#' @param rho Should be left as NULL. Default is NULL
+#' @param return.all Return variance multipliers and C for all k = 0,...,K. Default is \code{TRUE}
+#' @param EstVariances If \code{TRUE} and \code{B} is a single matrix, the variance multipliers for the identity and B are estimated for each unit g=1,...,p. Default if \code{FALSE}
+#' @param simpleDelta It is recommended the user not supply anything but \code{TRUE} for this argument (for now). If \code{TRUE}, the model for the residuals is MN(0, delta^2 I_p, V), where V = tau_1^2 B[[1]] + ... + tau_b^2 B[[b]]. If \code{FALSE}, Delta = diag(delta_1^2,...,delta_p^2). Defaults to \code{TRUE}.
+#' @param tol.rho ICaSE (i.e. sequential PCA) terminates when || tau_j/||tau_j||_2 - tau_\{j-1\}/||tau_\{j-1\}||_2 ||_2 <= tol.rho. Default is \code{1e-3}.
+#' @param max.iter.rho Maximum number of ICaSE iterations. Default is \code{15}.
+#' @param return.Bhat If \code{TRUE}, the effects of interest are estimated using GLS with the model Y ~ MN(BX' + LC', Delta, V), where Delta = diag(delta.1^2,...,delta.p^2) and V are re-estimated my REML using the estimated C. Default is \code{FALSE}
+#' @param svd.method Vestige of previous versions. Should not be altered by the user.
+#'
+#' @return A list \item{X}{The \code{n} x \code{d} model matrix} \item{Z}{The \code{n} x \code{r} model matrix of nuisance covariates, if specified} \item{C}{The estimate for the latent factors to be used in downstream analyses. The subsequent design matrix to use is [X Z C].} \item{Omega}{The estimate for the correlation between X and C} \item{Cperp}{The part of C orthogonal to \code{X}. If \code{return.all=TRUE}, it returns \code{Cperp} for all k = 1,...,K} \item{rho}{A \code{K+1} x #variance-components matrix, giving the variance multipliers for each k = 0,...,K. rho and tau are used interchangeably in this software.} \item{Delta.hat}{A p-vector of estimates for Delta, when we assume Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V) where Delta = diag(delta_1^2,...,delta_p^2). Returned only if \code{return.Bhat=TRUE}} \item{Bhat}{GLS estimate for the regression coefficients of interest, Beta, assuming Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V). If \code{B} is specified, this estimate can be improved by using a more accurate model where V is assumed gene/methylation site dependent. Returned only if \code{return.Bhat=TRUE}} \item{pvalues}{P-values for Beta. Returned only if \code{return.Bhat=TRUE}.} \item{tau.Bhat}{The tau estimated by REML under the model Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V(tau)). Returned only if \code{return.Bhat=TRUE}}
+#'
+#' @export
+EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=T, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
+  if (K <= 0) {return(0)}
   if (is.list(B) && length(B) > 1) {
     B <- IncludeIdent(B)
     D.ker <- CreateD.ker(A.equ)
+  } else {
+    D.ker <- NULL
   }
   if (is.null(X)) {
     out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, A.ine=A.ine, c.ine=c.ine, A.equ=A.equ, Var.0=Var.0, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
@@ -26,7 +55,6 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
   
   out <- list()
   out$rho <- rho
-  out$Sigma.e <- NULL; out$Sigma.b <- NULL
   out$X <- X; out$Z <- Z
   out$Cperp <- Cperp
   
@@ -78,12 +106,37 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
   n <- ncol(Y)
   d <- ncol(X)
   Q.X <- qr.Q(qr(X), complete = T)[,(d+1):n]
+  Y2 <- Y %*% Q.X
   
-  if (K == 0) {simpleDelta <- F}
+  ###Estimate Omega and C###
+  if (simpleDelta) {
+    V.simple <- EstimateV.complete(rho = rho, B = B)
+    if (is.null(V.simple)) {V.simple <- diag(n)}
+    delta.simple <- EstDelta.Simple(Y = Y2, V = t(Q.X)%*%V.simple%*%Q.X, Cov = t(Q.X)%*%Cperp)
+    SCCinv.simple <- solve( t(t(Q.X)%*%Cperp) %*% solve(t(Q.X)%*%V.simple%*%Q.X, t(Q.X)%*%Cperp) )
+    L.simple <- Y2 %*% solve(t(Q.X)%*%V.simple%*%Q.X, t(Q.X)%*%Cperp) %*% SCCinv.simple
+    Omega.WLS.simple <- solve(t(L.simple)%*%L.simple - p*delta.simple*SCCinv.simple, t(L.simple) %*% (Y %*% solve(V.simple, X) %*% solve(t(X)%*%solve(V.simple,X))))
+    out$C <- X %*% t(Omega.WLS.simple) + V.simple %*% Q.X %*% solve(t(Q.X)%*%V.simple%*%Q.X, t(Q.X)%*%Cperp)
+    
+    ##Return beta.hat, if prompted##
+    if (return.Bhat) {
+      out.Bhat <- Calc.pvalues(Y=Y, B=B, X=X, C=out$C, tau=rho, A.ine=A.ine, D.ker=D.ker)
+      out$Bhat <- out.Bhat$Beta.hat
+      out$pvalues <- out.Bhat$p
+      out$Delta.hat <- out.Bhat$Delta.hat
+      out$tau.Bhat <- out.Bhat$tau
+    }
+    
+    if (!is.null(Z)) {out$C <- Q.Z %*% out$C}
+    out$Omega <- Omega.WLS.simple
+    
+    return(out)
+  }
   
-  ##Perform 1 iteration of sequential PCA if simpleDelta is TRUE##
-  if (simpleDelta && !is.null(B)) {
-    Y2 <- Y %*% Q.X
+  ##Perform 1 iteration of sequential PCA if simpleDelta is FALSE##
+  if (!simpleDelta && !is.null(B)) {
+    
+    ##Estimate Omega.WLS with delta = diag(delta.1^2,...,delta.p^2)
     if (is.list(B)) {
       out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, A=A.ine, c=c.ine, D.ker=D.ker, max.iter=1, svd.method=svd.method)
       rho <- out.seq$Rho
@@ -184,4 +237,53 @@ EstimateV.complete <- function(rho, B) {
     V <- V + rho[j] * B[[j]]
   }
   return(V)
+}
+
+EstDelta.Simple <- function(Y, V, Cov=NULL) {
+  if (!is.null(Cov)) {
+    Q.Cov <- Compute.Q(cbind(Cov))
+    V <- t(Q.Cov)%*%V%*%Q.Cov
+    Y <- Y%*%Q.Cov
+  }
+  n <- ncol(Y)
+  p <- nrow(Y)
+  return(sum((Y %*% sqrt.mat2(V)$Rinv)^2) / n / p)
+}
+
+Compute.Q <- function(X) {
+  qr.X <- qr(X)
+  return(qr.Q(qr.X, complete = T)[,(qr.X$rank+1):nrow(X)])
+}
+
+#' Estimate beta and compute p-values under the model Y ~ MN\{ beta \%*\% X' + Gamma \%*\% Z' + L \%*\% C', diag(delta_1^2,...,delta_p^2), V(tau) \}
+#' 
+#' @param Y A \code{p} x \code{n} data matrix (# of genes x # of samples)
+#' @param B A list of \code{n} x \code{n} positive semi-definite matrices. Default is NULL
+#' @param X The \code{n} x \code{d} covariates of interest
+#' @param Z A \code{n} x \code{r} matrix of nuisance covariates. Default is NULL
+#' @param C The estimated \code{n} x \code{K} matrix of latent factors (see EstimateC_complete). Default is NULL
+#' @param tau The starting point for tau. Default is NULL and the user need not supply one
+#' @param A.ine A #inequality constaints x b matrix, where b = length(B) = num. variance components. \code{A.ine \%*\% tau >= 0}, where tau = (tau_1^2,...,tau_b^2) are the variance multipliers. The default is all variance multipliers are greater than 0.
+#' @param D.ker No need to specify this
+#' 
+#' @return A list \item{p}{The \code{p} x \code{d} matrix of p-values} \item{Beta.hat}{The estimate for beta, a \code{p} x \code{d} matrix} \item{Delta.hat}{A \code{p}-vector of residual variances} \item{tau}{The estimate for tau}
+#'
+#' @export
+Calc.pvalues <- function(Y, B=NULL, X, Z=NULL, C=NULL, tau=NULL, A.ine=NULL, D.ker=NULL) {
+  X <- cbind(X); d <- ncol(X)
+  Cov <- cbind(X,Z,C)
+  Q <- Compute.Q(Cov)
+  if (!is.null(B)) {
+    V.params <- Est.Corr.multB(Y = Y%*%Q, B = lapply(B, function(x){t(Q)%*%x%*%Q}), theta.0 = tau, A = A.ine, D.ker=NULL)
+    Delta.hat <- V.params$Delta
+  
+    V.invCov <- solve(CreateV(B = B, Rho = V.params$Rho), Cov)
+    SXX.inv <- solve( t(Cov) %*% V.invCov )
+    Beta.hat <- Y %*% V.invCov %*% SXX.inv
+    return(list(p=2*pt( -abs(Beta.hat[,1:d])/sqrt(Delta.hat)/sqrt(diag(SXX.inv)[1:d]), df = nrow(Cov)-ncol(Cov) ), tau=V.params$Rho, Beta.hat=Beta.hat[,1:d], Delta.hat=Delta.hat))
+  }
+  Delta.hat <- rowSums((Y%*%Q)^2)/(nrow(Cov)-ncol(Cov))
+  SXX.inv <- solve( t(Cov) %*% Cov )
+  Beta.hat <- Y %*% Cov %*% SXX.inv
+  return(list(p=2*pt( -abs(Beta.hat[,1:d])/sqrt(Delta.hat)/sqrt(diag(SXX.inv)[1:d]), df = nrow(Cov)-ncol(Cov) ), tau=NULL, Beta.hat=Beta.hat[,1:d], Delta.hat=Delta.hat))
 }
