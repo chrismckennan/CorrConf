@@ -5,6 +5,8 @@
 # A.ine %*% rho - c.ine >= 0
 # A.equ %*% rho - c.equ = 0
 #When there are no equality constraints, theta = rho. If there are, Let D.ker be such that A.equ %*% D.ker = 0, and define rho = D.ker %*% theta + mean.shift. We are optimizing over theta.
+
+#' @export
 Est.Corr.multB <- function(Y, B, theta.0=NULL, A=NULL, c=NULL, D.ker=NULL, max.iter=100, tol=1e-6, simple.rho = F) {
   n <- ncol(Y)
   b <- length(B)
