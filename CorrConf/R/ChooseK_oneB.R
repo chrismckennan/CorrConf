@@ -3,7 +3,7 @@
 require(parallel)
 require(irlba)
 
-ChooseK_parallel <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, max.iter.rho=15, svd.method="fast", plotit=T) {
+ChooseK_parallel <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, max.iter.rho=15, svd.method="fast", plotit=T, n_cores=NULL) {
   if (maxK < 1) {
     return(0)
   }
@@ -31,7 +31,7 @@ ChooseK_parallel <- function(Y, X=NULL, maxK, B, nFolds=10, tol.rho=1e-3, max.it
   ##Perform K-fold cross validation##
   folds.rows <- cut(1:p, breaks=nFolds, labels=FALSE)
   
-  n_cores <- max(detectCores() - 1, 1)
+  if (is.null(n_cores)) {n_cores <- max(detectCores() - 1, 1)}
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
   clusterExport(cl, c("Y", "Lambda", "maxK", "folds.rows", "tol.rho", "max.iter.rho", "svd.method"), envir=environment())

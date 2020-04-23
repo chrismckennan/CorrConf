@@ -4,8 +4,16 @@
 \alias{Calc.pvalues}
 \title{Estimate beta and compute p-values under the model Y ~ MN\{ beta \%*\% X' + Gamma \%*\% Z' + L \%*\% C', diag(delta_1^2,...,delta_p^2), V(tau) \}}
 \usage{
-Calc.pvalues(Y, B = NULL, X, Z = NULL, C = NULL, tau = NULL,
-  A.ine = NULL, D.ker = NULL)
+Calc.pvalues(
+  Y,
+  B = NULL,
+  X,
+  Z = NULL,
+  C = NULL,
+  tau = NULL,
+  A.ine = NULL,
+  D.ker = NULL
+)
 }
 \arguments{
 \item{Y}{A \code{p} x \code{n} data matrix (# of genes x # of samples)}

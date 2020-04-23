@@ -4,11 +4,26 @@
 \alias{EstimateC_complete}
 \title{Estimate \code{C} for a given value of \code{K}}
 \usage{
-EstimateC_complete(Y, K, X = NULL, Z = NULL, B = NULL,
-  A.ine = NULL, c.ine = NULL, A.equ = NULL, Var.0 = NULL,
-  Cperp = NULL, rho = NULL, return.all = T, EstVariances = F,
-  simpleDelta = T, tol.rho = 0.001, max.iter.rho = 15,
-  return.Bhat = F, svd.method = "fast")
+EstimateC_complete(
+  Y,
+  K,
+  X = NULL,
+  Z = NULL,
+  B = NULL,
+  A.ine = NULL,
+  c.ine = NULL,
+  A.equ = NULL,
+  Var.0 = NULL,
+  Cperp = NULL,
+  rho = NULL,
+  return.all = T,
+  EstVariances = F,
+  simpleDelta = T,
+  tol.rho = 0.001,
+  max.iter.rho = 15,
+  return.Bhat = F,
+  svd.method = "fast"
+)
 }
 \arguments{
 \item{Y}{A \code{p} x \code{n} (number genes/methylation sites x sample size) matrix of observed expression/methylation}

@@ -3,7 +3,7 @@ library(irlba)
 
 #' Estimate the latent factor dimension, \code{K}, in high dimensional data
 #'
-#' Estimates \code{K} with a modified cross-validation that accounts for correlation between samples, if present. Of course, this method is still valid if samples are independent. The code is parallelized and runs on all but one core.
+#' Estimates \code{K} with a modified cross-validation that accounts for correlation between samples, if present. Of course, this method is still valid if samples are independent. The code is parallelized and runs on a user-specified number of cores.
 #'
 #' @param Y A \code{p} x \code{n} (number genes/methylation sites x sample size) matrix of observed expression/methylation
 #' @param Cov A \code{n} x (\code{d+r}) (sample size x total number of covariates) matrix, where \code{d} = number of covariates of interest and \code{r} = number of nuisance covariates (like the intercept and/or other observed technical factors). The default is no additional covariates.
@@ -19,23 +19,24 @@ library(irlba)
 #' @param max.iter.rho Maximum number of ICaSE iterations. Default is \code{15}.
 #' @param svd.method Vestige of previous versions. Should not be altered by the user.
 #' @param plotit If \code{TRUE}, plots the leave one out cross validation (LOO XV) plot. Defaults to \code{TRUE}.
+#' @param n_cores The number of cores to use. The default is #available cores - 1.
 #'
 #' @return A list \item{K}{A vector of latent dimensions considered} \item{LOO.XV}{A vector of the average leave-one-out cross validation for each \code{K} considered} \item{K.hat}{The \code{K} that gives the minimum leave-one-out cross validation}
 #' @export
-ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=T, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, tol.rho=1e-3, max.iter.rho=15, svd.method="slow", plotit=T) {
+ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=T, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, tol.rho=1e-3, max.iter.rho=15, svd.method="slow", plotit=T, n_cores=NULL) {
   
   ##No random effect, samples are uncorrelated##
   if (is.null(B)) {
-    return( ChooseK_NoB(Y=Y, X=Cov, maxK=maxK, nFolds=nFolds, simpleDelta=simpleDelta, max.iter.svd=3, svd.method=svd.method, plotit=plotit) )
+    return( ChooseK_NoB(Y=Y, X=Cov, maxK=maxK, nFolds=nFolds, simpleDelta=simpleDelta, max.iter.svd=3, svd.method=svd.method, plotit=plotit, n_cores=n_cores) )
   }
   
   ##One B matrix in random effect##
   if (is.matrix(B) || (is.list(B) && length(B) == 1)) {
     if (is.list(B)) {B <- B[[1]]}
     if (simpleDelta) {  #Simple rho
-      return( ChooseK_parallel.simrho(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit) )
+      return( ChooseK_parallel.simrho(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit, n_cores=n_cores) )
     } else {
-      return( ChooseK_parallel(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit) )
+      return( ChooseK_parallel(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit, n_cores=n_cores) )
     }
   }
   
@@ -45,9 +46,9 @@ ChooseK <- function(Y, Cov=NULL, maxK=20, B=NULL, nFolds=10, simpleDelta=T, A.in
     B <- IncludeIdent(B)
     D.ker <- CreateD.ker(A.equ)
     if (simpleDelta) {  #Simple rho
-      return( ChooseK_parallel.multB.simrho( Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A.lin=A.ine, c.lin=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit ) )
+      return( ChooseK_parallel.multB.simrho( Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A.lin=A.ine, c.lin=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit, n_cores=n_cores ) )
     } else {
-      return( ChooseK_parallel.multB(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A.lin=A.ine, c.lin=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit) )
+      return( ChooseK_parallel.multB(Y=Y, X=Cov, maxK=maxK, B=B, nFolds=nFolds, A.lin=A.ine, c.lin=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method, plotit=plotit, n_cores=n_cores) )
     }
   }
 }

@@ -274,7 +274,7 @@ Calc.pvalues <- function(Y, B=NULL, X, Z=NULL, C=NULL, tau=NULL, A.ine=NULL, D.k
   Cov <- cbind(X,Z,C)
   Q <- Compute.Q(Cov)
   if (!is.null(B)) {
-    V.params <- Est.Corr.multB(Y = Y%*%Q, B = lapply(B, function(x){t(Q)%*%x%*%Q}), theta.0 = tau, A = A.ine, D.ker=NULL)
+    V.params <- Est.Corr.multB(Y = Y%*%Q, B = lapply(B, function(x){t(Q)%*%x%*%Q}), theta.0 = tau, A = A.ine, D.ker=D.ker)
     Delta.hat <- V.params$Delta
   
     V.invCov <- solve(CreateV(B = B, Rho = V.params$Rho), Cov)

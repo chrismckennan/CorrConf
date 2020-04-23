@@ -2,7 +2,7 @@ require(parallel)
 
 ##This chooses K
 
-ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, max.iter.rho=15, svd.method="fast", plotit=T) {
+ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, max.iter.rho=15, svd.method="fast", plotit=T, n_cores=NULL) {
   if (maxK < 1) {
     return(0)
   }
@@ -33,7 +33,7 @@ ChooseK_parallel.simrho <- function(Y, X=NULL, maxK, B, nFolds, tol.rho=1e-3, ma
   }
   rm(Y)
   
-  n_cores <- max(detectCores() - 1, 1)
+  if (is.null(n_cores)) {n_cores <- max(detectCores() - 1, 1)}
   cl <- makeCluster(n_cores)
   clusterExport(cl, c("SYY", "Lambda", "maxK", "p", "tol.rho", "max.iter.rho", "svd.method"), envir=environment())
   clusterEvalQ(cl, {library(irlba); library(CorrConf)})

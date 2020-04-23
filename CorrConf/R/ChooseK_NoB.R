@@ -1,7 +1,7 @@
 library(irlba)
 library(parallel)
 
-ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=3, svd.method="fast", plotit=T) {
+ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=3, svd.method="fast", plotit=T, n_cores=NULL) {
   if (maxK < 1) {
     return(0)
   }
@@ -25,7 +25,7 @@ ChooseK_NoB <- function(Y, X=NULL, maxK, nFolds=10, simpleDelta=F, max.iter.svd=
   ##Perform K-fold cross validation##
   folds.rows <- cut(1:p, breaks=nFolds, labels=FALSE)
   
-  n_cores <- max(detectCores() - 1, 1)
+  if (is.null(n_cores)) {n_cores <- max(detectCores() - 1, 1)}
   cl <- makeCluster(n_cores)
   clusterEvalQ(cl=cl, {library(irlba); library(CorrConf)})
   if (!simpleDelta) {
