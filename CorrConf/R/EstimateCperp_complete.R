@@ -21,7 +21,7 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A.ine=NUL
   }
   if (!is.null(Z)) {
     Q.Z <- qr.Q(qr(Z), complete = T)[,(ncol(Z)+1):nrow(Z)]
-    X <- t(Q.Z) %*% X
+    if (!is.null(X)) {X <- t(Q.Z) %*% X}
     Y <- Y %*% Q.Z
     if (!is.null(B)) {
       if (is.list(B)) {
@@ -78,22 +78,23 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A.ine=NUL
     return(out)
   }
   
+  const.y <- mean(rowMeans(Y^2))
   ######One B######
   if (is.matrix(B)) {
     if (simpleDelta) {   #Simple delta
-      out.1 <- Optimize.Theta.simrho.full(SYY = 1/p * t(Y) %*% Y, X = X, B = B, maxK = K, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+      out.1 <- Optimize.Theta.simrho.full(SYY = 1/p/const.y * t(Y) %*% Y, X = X, B = B, maxK = K, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
     } else {   #Multiple delta
-      out.1 <- Optimize.Theta.full(Y=Y, K=K, B=B, Cov=X, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
+      out.1 <- Optimize.Theta.full(Y=1/sqrt(const.y)*Y, K=K, B=B, Cov=X, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     }
     
     if (return.all) {
       out$C <- out.1$C
       out$K <- 0:K
-      out$rho <- out.1$rho
+      out$rho <- out.1$rho*const.y
       names(out$C) <- out$K; names(out$rho) <- out$K
     } else {
       out$C <- out.1$C[[K+1]]
-      out$rho <- out.1$rho[K+1]
+      out$rho <- out.1$rho[K+1]*const.y
     }
     return(out)
   }
@@ -102,9 +103,9 @@ EstimateCperp <- function(Y, K, X=NULL, Z=NULL, B=NULL, simpleDelta=F, A.ine=NUL
   ######Multiple B######
   if (is.list(B)) {
     if (simpleDelta) {   #Simple delta
-      out.1 <- Optimize.Theta.multB.simrho(SYY = 1/p*t(Y)%*%Y, maxK = K, B = B, Cov = X, A=A.ine, c=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+      out.1 <- Optimize.Theta.multB.simrho(SYY = 1/p/const.y*t(Y)%*%Y, maxK = K, B = B, Cov = X, A=A.ine, c=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
     } else {   #Multiple delta
-      out.1 <- Optimize.Theta.multB(Y = Y, maxK = K, B = B, Cov = X, A=A.ine, c=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
+      out.1 <- Optimize.Theta.multB(Y = 1/sqrt(const.y)*Y, maxK = K, B = B, Cov = X, A=A.ine, c=c.ine, D.ker=D.ker, Var.0=Var.0, tol.rho = tol.rho, max.iter.rho = max.iter.rho, svd.method = svd.method)
     }
     if (!is.null(X) && K > 0) {
       out.1$C <- lapply(out.1$C, function(x, Q.X) {if(is.null(x)) {return(NULL)}; return(Q.X %*% x)}, Q.X=Q.X)

@@ -87,12 +87,14 @@ seq.PCA.multB <- function(Y, B, K, Rho.0, Delta.0=NULL, A=NULL, c=NULL, D.ker=NU
 #' Compute the square-root and inverse square-root of a symmetric, positive semi-definite matrix
 #'
 #' @param X An \code{n} x \code{n} symmetric psd matrix
+#' @param return.const.V If X is a variance matrix, should a normalizing constant be returned. Defaults to \code{F}.
 #'
-#' @return A list \item{R}{An \code{n} x \code{n} matrix; R\%*\%R = X} \item{Rinv}{An \code{n} x \code{n} matrix; Rinv\%*\%Rinv = X^\{-1\}}
+#' @return A list \item{R}{An \code{n} x \code{n} matrix; R\%*\%R = X} \item{Rinv}{An \code{n} x \code{n} matrix; Rinv\%*\%Rinv = X^\{-1\}} \item{norm.const}{A scalar such that \code{norm.const*X} has determinant 1.}
 #' @export
-sqrt.mat2 <- function(X) {  #R^2 = X
+sqrt.mat2 <- function(X, return.const.V=F) {  #R^2 = X
   s <- svd.wrapper(X)
-  return( list(R=sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u), Rinv=sweep(s$u, 2, 1/sqrt(s$d), "*") %*% t(s$u) ) )
+  if (!return.const.V) {return( list(R=sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u), Rinv=sweep(s$u, 2, 1/sqrt(s$d), "*") %*% t(s$u) ) )}
+  return( list(R=sweep(s$u, 2, sqrt(s$d), "*") %*% t(s$u), Rinv=sweep(s$u, 2, 1/sqrt(s$d), "*") %*% t(s$u), norm.const=exp(-sum(log(s$d))*length(s$d)) ) )
 }
 
 #' Compute the square-root of a symmetric, positive semi-definite matrix

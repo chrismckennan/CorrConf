@@ -66,7 +66,9 @@ seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, A=NULL, c=NULL, D.ker=NULL, s
     C.0 <- sqrt.V %*% s.0$v[,1:K]
     Q.C <- qr.Q(qr(C.0), complete=T)[,(K+1):n]
     
-    out.rho.1 <- Est.Corr.multB(Y=t(Q.C) %*% SYY %*% Q.C, B=lapply(B, function(x, Q.C){t(Q.C) %*% x %*% Q.C}, Q.C=Q.C), theta.0=Rho.0, simple.rho=T, A=A, c=c, D.ker=D.ker)
+    tmp.1 <- t(Q.C) %*% SYY %*% Q.C; B.tmp <- lapply(B, function(x, Q.C){t(Q.C) %*% x %*% Q.C}, Q.C=Q.C)
+    out.rho.1 <- Est.Corr.multB(Y=tmp.1, B=B.tmp, theta.0=Rho.0*mean(diag(tmp.1))/sum(Rho.0*sapply(B.tmp,function(x){mean(diag(x))})), simple.rho=T, A=A, c=c, D.ker=D.ker)
+    rm(tmp.1,B.tmp)
     Rho.1 <- out.rho.1$Rho
     if (norm(Rho.0/norm(Rho.0,type="2")-Rho.1/norm(Rho.1,type="2"), type="2") < b*tol.rho && i > 1) {
       Rho.mat[i+1,] <- Rho.1
@@ -77,3 +79,5 @@ seq.PCA.multB.simrho <- function(SYY, B, K, Rho.0, A=NULL, c=NULL, D.ker=NULL, s
   }
   return(list(Rho=Rho.0, all.Rho=Rho.mat, out=0))
 }
+
+#Normalize.Rho <- 

@@ -15,7 +15,7 @@ Est.Corr.multB <- function(Y, B, theta.0=NULL, A=NULL, c=NULL, D.ker=NULL, max.i
     theta.0 <- c(1-sum(rep(min(0.2, 1/b), b-1)), rep(min(0.2, 1/b), b-1))
   }
   if (is.null(A)) {A <- diag(b)}
-  if (is.null(c)) {c <- rep(1e-8,nrow(A))}
+  if (is.null(c)) {c <- rep(min(min(theta.0)-1e-12,1e-8),nrow(A))}
   if (is.null(D.ker)) {D.ker <- diag(b)}
   if (ncol(D.ker) < b) {
     mean.shift <- theta.0
