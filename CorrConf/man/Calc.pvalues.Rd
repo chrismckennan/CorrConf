@@ -33,7 +33,7 @@ Calc.pvalues(
 \item{D.ker}{No need to specify this}
 }
 \value{
-A list \item{p}{The \code{p} x \code{d} matrix of p-values} \item{Beta.hat}{The estimate for beta, a \code{p} x \code{d} matrix} \item{Delta.hat}{A \code{p}-vector of residual variances} \item{tau}{The estimate for tau}
+A list \item{t}{The \code{p} x \code{d} matrix of t-scores} \item{p}{The \code{p} x \code{d} matrix of p-values} \item{Beta.hat}{The estimate for beta, a \code{p} x \code{d} matrix} \item{Delta.hat}{A \code{p}-vector of residual variances} \item{tau}{The estimate for tau}
 }
 \description{
 Estimate beta and compute p-values under the model Y ~ MN\{ beta \%*\% X' + Gamma \%*\% Z' + L \%*\% C', diag(delta_1^2,...,delta_p^2), V(tau) \}

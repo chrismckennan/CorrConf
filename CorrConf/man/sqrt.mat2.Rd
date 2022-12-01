@@ -4,13 +4,15 @@
 \alias{sqrt.mat2}
 \title{Compute the square-root and inverse square-root of a symmetric, positive semi-definite matrix}
 \usage{
-\method{sqrt}{mat2}(X)
+\method{sqrt}{mat2}(X, return.const.V = F)
 }
 \arguments{
 \item{X}{An \code{n} x \code{n} symmetric psd matrix}
+
+\item{return.const.V}{If X is a variance matrix, should a normalizing constant be returned. Defaults to \code{F}.}
 }
 \value{
-A list \item{R}{An \code{n} x \code{n} matrix; R\%*\%R = X} \item{Rinv}{An \code{n} x \code{n} matrix; Rinv\%*\%Rinv = X^\{-1\}}
+A list \item{R}{An \code{n} x \code{n} matrix; R\%*\%R = X} \item{Rinv}{An \code{n} x \code{n} matrix; Rinv\%*\%Rinv = X^\{-1\}} \item{norm.const}{A scalar such that \code{norm.const*X} has determinant 1.}
 }
 \description{
 Compute the square-root and inverse square-root of a symmetric, positive semi-definite matrix

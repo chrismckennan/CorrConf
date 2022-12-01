@@ -18,10 +18,12 @@ EstimateC_complete(
   rho = NULL,
   return.all = T,
   EstVariances = F,
-  simpleDelta = T,
+  simpleDelta = F,
+  Use.Naive.Omega = F,
   tol.rho = 0.001,
   max.iter.rho = 15,
   return.Bhat = F,
+  max.iter.rho.Bhat = 1,
   svd.method = "fast"
 )
 }
@@ -52,7 +54,7 @@ EstimateC_complete(
 
 \item{EstVariances}{If \code{TRUE} and \code{B} is a single matrix, the variance multipliers for the identity and B are estimated for each unit g=1,...,p. Default if \code{FALSE}}
 
-\item{simpleDelta}{It is recommended the user not supply anything but \code{TRUE} for this argument (for now). If \code{TRUE}, the model for the residuals is MN(0, delta^2 I_p, V), where V = tau_1^2 B[[1]] + ... + tau_b^2 B[[b]]. If \code{FALSE}, Delta = diag(delta_1^2,...,delta_p^2). Defaults to \code{TRUE}.}
+\item{simpleDelta}{If \code{TRUE}, the model for the residuals is MN(0, delta^2 I_p, V), where V = tau_1^2 B[[1]] + ... + tau_b^2 B[[b]]. If \code{FALSE}, Delta = diag(delta_1^2,...,delta_p^2). Defaults to \code{FALSE}.}
 
 \item{tol.rho}{ICaSE (i.e. sequential PCA) terminates when || tau_j/||tau_j||_2 - tau_\{j-1\}/||tau_\{j-1\}||_2 ||_2 <= tol.rho. Default is \code{1e-3}.}
 
@@ -63,7 +65,7 @@ EstimateC_complete(
 \item{svd.method}{Vestige of previous versions. Should not be altered by the user.}
 }
 \value{
-A list \item{X}{The \code{n} x \code{d} model matrix} \item{Z}{The \code{n} x \code{r} model matrix of nuisance covariates, if specified} \item{C}{The estimate for the latent factors to be used in downstream analyses. The subsequent design matrix to use is [X Z C].} \item{Omega}{The estimate for the correlation between X and C} \item{Cperp}{The part of C orthogonal to \code{X}. If \code{return.all=TRUE}, it returns \code{Cperp} for all k = 1,...,K} \item{rho}{A \code{K+1} x #variance-components matrix, giving the variance multipliers for each k = 0,...,K. rho and tau are used interchangeably in this software.} \item{Delta.hat}{A p-vector of estimates for Delta, when we assume Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V) where Delta = diag(delta_1^2,...,delta_p^2). Returned only if \code{return.Bhat=TRUE}} \item{Bhat}{GLS estimate for the regression coefficients of interest, Beta, assuming Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V). If \code{B} is specified, this estimate can be improved by using a more accurate model where V is assumed gene/methylation site dependent. Returned only if \code{return.Bhat=TRUE}} \item{pvalues}{P-values for Beta. Returned only if \code{return.Bhat=TRUE}.} \item{tau.Bhat}{The tau estimated by REML under the model Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V(tau)). Returned only if \code{return.Bhat=TRUE}}
+A list \item{X}{The \code{n} x \code{d} model matrix} \item{Z}{The \code{n} x \code{r} model matrix of nuisance covariates, if specified} \item{C}{The estimate for the latent factors to be used in downstream analyses. The subsequent design matrix to use is [X Z C].} \item{Omega}{The estimate for the correlation between X and C} \item{Cperp}{The part of C orthogonal to \code{X}. If \code{return.all=TRUE}, it returns \code{Cperp} for all k = 1,...,K} \item{rho}{A \code{K+1} x #variance-components matrix, giving the variance multipliers for each k = 0,...,K. rho and tau are used interchangeably in this software.} \item{Delta.hat}{A p-vector of estimates for Delta, when we assume Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V) where Delta = diag(delta_1^2,...,delta_p^2). Returned only if \code{return.Bhat=TRUE}} \item{Bhat}{GLS estimate for the regression coefficients of interest, Beta, assuming Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V). If \code{B} is specified, this estimate can be improved by using a more accurate model where V is assumed gene/methylation site dependent. Returned only if \code{return.Bhat=TRUE}} \item{pvalues}{P-values for Beta. Returned only if \code{return.Bhat=TRUE}.} \item{tscores}{The \code{p} x \code{d} matrix of t-scores} \item{df.tscores}{The degrees of freedom for the t-scores} \item{tau.Bhat}{The tau estimated by REML under the model Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V(tau)). Returned only if \code{return.Bhat=TRUE}}
 }
 \description{
 Estimate \code{C} for a given value of \code{K}. The user can also estimate Beta, the effect due to the covariates of interest by specifying \code{return.Bhat=T}.

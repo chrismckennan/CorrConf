@@ -20,16 +20,17 @@ library(parallel)
 #' @param rho Should be left as NULL. Default is NULL
 #' @param return.all Return variance multipliers and C for all k = 0,...,K. Default is \code{TRUE}
 #' @param EstVariances If \code{TRUE} and \code{B} is a single matrix, the variance multipliers for the identity and B are estimated for each unit g=1,...,p. Default if \code{FALSE}
-#' @param simpleDelta It is recommended the user not supply anything but \code{TRUE} for this argument (for now). If \code{TRUE}, the model for the residuals is MN(0, delta^2 I_p, V), where V = tau_1^2 B[[1]] + ... + tau_b^2 B[[b]]. If \code{FALSE}, Delta = diag(delta_1^2,...,delta_p^2). Defaults to \code{TRUE}.
+#' @param simpleDelta If \code{TRUE}, the model for the residuals is MN(0, delta^2 I_p, V), where V = tau_1^2 B[[1]] + ... + tau_b^2 B[[b]]. If \code{FALSE}, Delta = diag(delta_1^2,...,delta_p^2). Defaults to \code{FALSE}.
 #' @param tol.rho ICaSE (i.e. sequential PCA) terminates when || tau_j/||tau_j||_2 - tau_\{j-1\}/||tau_\{j-1\}||_2 ||_2 <= tol.rho. Default is \code{1e-3}.
 #' @param max.iter.rho Maximum number of ICaSE iterations. Default is \code{15}.
 #' @param return.Bhat If \code{TRUE}, the effects of interest are estimated using GLS with the model Y ~ MN(BX' + LC', Delta, V), where Delta = diag(delta.1^2,...,delta.p^2) and V are re-estimated my REML using the estimated C. Default is \code{FALSE}
 #' @param svd.method Vestige of previous versions. Should not be altered by the user.
 #'
-#' @return A list \item{X}{The \code{n} x \code{d} model matrix} \item{Z}{The \code{n} x \code{r} model matrix of nuisance covariates, if specified} \item{C}{The estimate for the latent factors to be used in downstream analyses. The subsequent design matrix to use is [X Z C].} \item{Omega}{The estimate for the correlation between X and C} \item{Cperp}{The part of C orthogonal to \code{X}. If \code{return.all=TRUE}, it returns \code{Cperp} for all k = 1,...,K} \item{rho}{A \code{K+1} x #variance-components matrix, giving the variance multipliers for each k = 0,...,K. rho and tau are used interchangeably in this software.} \item{Delta.hat}{A p-vector of estimates for Delta, when we assume Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V) where Delta = diag(delta_1^2,...,delta_p^2). Returned only if \code{return.Bhat=TRUE}} \item{Bhat}{GLS estimate for the regression coefficients of interest, Beta, assuming Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V). If \code{B} is specified, this estimate can be improved by using a more accurate model where V is assumed gene/methylation site dependent. Returned only if \code{return.Bhat=TRUE}} \item{pvalues}{P-values for Beta. Returned only if \code{return.Bhat=TRUE}.} \item{tau.Bhat}{The tau estimated by REML under the model Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V(tau)). Returned only if \code{return.Bhat=TRUE}}
+#' @return A list \item{X}{The \code{n} x \code{d} model matrix} \item{Z}{The \code{n} x \code{r} model matrix of nuisance covariates, if specified} \item{C}{The estimate for the latent factors to be used in downstream analyses. The subsequent design matrix to use is [X Z C].} \item{Omega}{The estimate for the correlation between X and C} \item{Cperp}{The part of C orthogonal to \code{X}. If \code{return.all=TRUE}, it returns \code{Cperp} for all k = 1,...,K} \item{rho}{A \code{K+1} x #variance-components matrix, giving the variance multipliers for each k = 0,...,K. rho and tau are used interchangeably in this software.} \item{Delta.hat}{A p-vector of estimates for Delta, when we assume Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V) where Delta = diag(delta_1^2,...,delta_p^2). Returned only if \code{return.Bhat=TRUE}} \item{Bhat}{GLS estimate for the regression coefficients of interest, Beta, assuming Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V). If \code{B} is specified, this estimate can be improved by using a more accurate model where V is assumed gene/methylation site dependent. Returned only if \code{return.Bhat=TRUE}} \item{pvalues}{P-values for Beta. Returned only if \code{return.Bhat=TRUE}.} \item{tscores}{The \code{p} x \code{d} matrix of t-scores} \item{df.tscores}{The degrees of freedom for the t-scores} \item{tau.Bhat}{The tau estimated by REML under the model Y ~ MN_\{p x n\}(Beta X' + G Z' + L C', Delta, V(tau)). Returned only if \code{return.Bhat=TRUE}}
 #'
 #' @export
-EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=T, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, svd.method="fast") {
+EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=NULL, A.equ=NULL, Var.0=NULL, Cperp=NULL, rho=NULL, return.all=T, EstVariances=F, simpleDelta=F, Use.Naive.Omega=F, tol.rho=1e-3, max.iter.rho=15, return.Bhat=F, max.iter.rho.Bhat=1, svd.method="fast") {
+  max.iter.rho.Bhat <- min(max.iter.rho.Bhat,max.iter.rho)
   if (K <= 0) {return(0)}
   if (is.list(B) && length(B) > 1) {
     B <- IncludeIdent(B)
@@ -38,7 +39,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
     D.ker <- NULL
   }
   if (is.null(X)) {
-    out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, A.ine=A.ine, c.ine=c.ine, A.equ=A.equ, Var.0=Var.0, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
+    out <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=T, A.ine=A.ine, c.ine=c.ine, A.equ=A.equ, Var.0=Var.0, return.all=T, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$X <- X
     out$Z <- Z
     if (!is.null(Z)) {
@@ -59,7 +60,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
   out$Cperp <- Cperp
   
   if (is.null(Cperp) || (!is.null(B) && is.null(rho))) {
-    out.perp <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=simpleDelta, A.ine=A.ine, c.ine=c.ine, A.equ=A.equ, Var.0=Var.0, return.all=return.all, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
+    out.perp <- EstimateCperp(Y=Y, K=K, X=X, Z=Z, B=B, simpleDelta=T, A.ine=A.ine, c.ine=c.ine, A.equ=A.equ, Var.0=Var.0, return.all=return.all, tol.rho=tol.rho, max.iter.rho=max.iter.rho, svd.method=svd.method)
     out$Cperp <- out.perp$C
     if (return.all) {
       if (!is.null(B)) {
@@ -122,6 +123,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
     if (return.Bhat) {
       out.Bhat <- Calc.pvalues(Y=Y, B=B, X=X, C=out$C, tau=rho, A.ine=A.ine, D.ker=D.ker)
       out$Bhat <- out.Bhat$Beta.hat
+      out$tscores <- out.Bhat$t; out$df.tscores <- n - d - NCOL(out$C)
       out$pvalues <- out.Bhat$p
       out$Delta.hat <- out.Bhat$Delta.hat
       out$tau.Bhat <- out.Bhat$tau
@@ -133,16 +135,16 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
     return(out)
   }
   
-  ##Perform 1 iteration of sequential PCA if simpleDelta is FALSE##
+  ##Perform max.iter.rho.Bhat iteration of sequential PCA if simpleDelta is FALSE##
   if (!simpleDelta && !is.null(B)) {
     
     ##Estimate Omega.WLS with delta = diag(delta.1^2,...,delta.p^2)
     if (is.list(B)) {
-      out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, A=A.ine, c=c.ine, D.ker=D.ker, max.iter=1, svd.method=svd.method)
+      out.seq <- seq.PCA.multB(Y=Y2, B=lapply(B, function(x, Q.X){t(Q.X) %*% x %*% Q.X}, Q.X=Q.X), K=K, Rho.0=rho, A=A.ine, c=c.ine, D.ker=D.ker, max.iter=max.iter.rho.Bhat, svd.method=svd.method)
       rho <- out.seq$Rho
       Delta.0 <- out.seq$Delta
     } else {
-      out.seq <- seq.PCA(Y=Y2, K=K, B=t(Q.X) %*% B %*% Q.X, rho.0=rho, max.iter=1)
+      out.seq <- seq.PCA(Y=Y2, K=K, B=t(Q.X) %*% B %*% Q.X, rho.0=rho, max.iter=max.iter.rho.Bhat)
       rho <- out.seq$rho
       Delta.0 <- out.seq$Delta
     }
@@ -183,6 +185,7 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
       out$Bhat <- Y %*% solve(V, X) %*% solve(t(X) %*% solve(V, X))
       out$Delta.hat <- rowSums(Y2^2)/(n-d-K)
       out$tscores <- sweep(x = out$Bhat / sqrt(out$Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X)))), FUN = "/", check.margin = F)
+      out$df.tscores <- n - d - K
       out$zscores <- qnorm(pt(out$tscores, df=n-d-K))
       out$pvalues <- 2*pt(-abs(out$tscores), df=n-d-K)
     }
@@ -201,14 +204,29 @@ EstimateC_complete <- function(Y, K, X=NULL, Z=NULL, B=NULL, A.ine=NULL, c.ine=N
   out$Omega.GLS.naive <- solve(t(L.hat / Delta.hat) %*% L.hat, t(L.hat / Delta.hat) %*% Y1)
   
   #Estimate C#
-  out$C <- X %*% t(out$Omega.GLS) + V %*% Q.X %*% solve(t(Q.X) %*% V %*% Q.X, t(Q.X) %*% Cperp)
+  if (!Use.Naive.Omega) {
+    out$C <- X %*% t(out$Omega.GLS) + V %*% Q.X %*% solve(t(Q.X) %*% V %*% Q.X, t(Q.X) %*% Cperp)
+  } else {
+    out$C <- X %*% t(out$Omega.GLS.naive) + V %*% Q.X %*% solve(t(Q.X) %*% V %*% Q.X, t(Q.X) %*% Cperp)
+  }
   if (!is.null(Z)) { out$C <- Q.Z %*% out$C }
   if (return.Bhat) {
-    out$Bhat <- Y1 - L.hat %*% out$Omega.GLS
-    out$tscores <- sweep(x = out$Bhat / sqrt(Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X))) + diag(t(out$Omega.GLS) %*% var.mat %*% out$Omega.GLS)), FUN = "/", check.margin = F)
+    if (!Use.Naive.Omega) {
+      out$Bhat <- Y1 - L.hat %*% out$Omega.GLS
+      out$tscores <- sweep(x = out$Bhat / sqrt(Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X))) + diag(t(out$Omega.GLS) %*% var.mat %*% out$Omega.GLS)), FUN = "/", check.margin = F)
+    } else {
+      out$Bhat <- Y1 - L.hat %*% out$Omega.GLS.naive
+      out$tscores <- sweep(x = out$Bhat / sqrt(Delta.hat), MARGIN = 2, STATS = sqrt(diag(solve(t(X) %*% solve(V, X))) + diag(t(out$Omega.GLS.naive) %*% var.mat %*% out$Omega.GLS.naive)), FUN = "/", check.margin = F)
+    }
+    out$df.tscores <- n - d - K
     out$zscores <- qnorm(pt(out$tscores, df=n-d-K))
     out$pvalues <- 2*pt(-abs(out$tscores), df=n-d-K)
     out$Delta.hat <- Delta.hat
+    if (!Use.Naive.Omega) {
+      out$Calc.pvalues <- Calc.pvalues(Y = Y, B = B, X = X, C = X %*% t(out$Omega.GLS) + V %*% Q.X %*% solve(t(Q.X) %*% V %*% Q.X, t(Q.X) %*% Cperp), tau = rho, A.ine = A.ine, D.ker = D.ker)
+    } else {
+      out$Calc.pvalues <- Calc.pvalues(Y = Y, B = B, X = X, C = X %*% t(out$Omega.GLS.naive) + V %*% Q.X %*% solve(t(Q.X) %*% V %*% Q.X, t(Q.X) %*% Cperp), tau = rho, A.ine = A.ine, D.ker = D.ker)
+    }
   }
   
   ######Estimate variances with one B######
@@ -266,7 +284,7 @@ Compute.Q <- function(X) {
 #' @param A.ine A #inequality constaints x b matrix, where b = length(B) = num. variance components. \code{A.ine \%*\% tau >= 0}, where tau = (tau_1^2,...,tau_b^2) are the variance multipliers. The default is all variance multipliers are greater than 0.
 #' @param D.ker No need to specify this
 #' 
-#' @return A list \item{p}{The \code{p} x \code{d} matrix of p-values} \item{Beta.hat}{The estimate for beta, a \code{p} x \code{d} matrix} \item{Delta.hat}{A \code{p}-vector of residual variances} \item{tau}{The estimate for tau}
+#' @return A list \item{t}{The \code{p} x \code{d} matrix of t-scores} \item{p}{The \code{p} x \code{d} matrix of p-values} \item{Beta.hat}{The estimate for beta, a \code{p} x \code{d} matrix} \item{Delta.hat}{A \code{p}-vector of residual variances} \item{tau}{The estimate for tau}
 #'
 #' @export
 Calc.pvalues <- function(Y, B=NULL, X, Z=NULL, C=NULL, tau=NULL, A.ine=NULL, D.ker=NULL) {
@@ -274,16 +292,28 @@ Calc.pvalues <- function(Y, B=NULL, X, Z=NULL, C=NULL, tau=NULL, A.ine=NULL, D.k
   Cov <- cbind(X,Z,C)
   Q <- Compute.Q(Cov)
   if (!is.null(B)) {
+    if (is.matrix(B)) {B <- list(diag(nrow(B)),B)}
+    if (length(tau)==1) {tau <- c(1-tau,tau)}
     V.params <- Est.Corr.multB(Y = Y%*%Q, B = lapply(B, function(x){t(Q)%*%x%*%Q}), theta.0 = tau, A = A.ine, D.ker=D.ker)
     Delta.hat <- V.params$Delta
   
     V.invCov <- solve(CreateV(B = B, Rho = V.params$Rho), Cov)
     SXX.inv <- solve( t(Cov) %*% V.invCov )
     Beta.hat <- Y %*% V.invCov %*% SXX.inv
-    return(list(p=2*pt( -abs(Beta.hat[,1:d])/sqrt(Delta.hat)/sqrt(diag(SXX.inv)[1:d]), df = nrow(Cov)-ncol(Cov) ), tau=V.params$Rho, Beta.hat=Beta.hat[,1:d], Delta.hat=Delta.hat))
+    if (d==1) {
+    	t <- Beta.hat[,1:d]/sqrt(Delta.hat)/sqrt(diag(SXX.inv)[1:d])
+    } else {
+    	t <- (Beta.hat[,1:d]/sqrt(Delta.hat))%*%diag(1/sqrt(diag(SXX.inv)[1:d]))
+    }
+    return(list(t=t, p=2*pt( -abs(t), df = nrow(Cov)-ncol(Cov) ), tau=V.params$Rho, Beta.hat=Beta.hat[,1:d], Delta.hat=Delta.hat))
   }
   Delta.hat <- rowSums((Y%*%Q)^2)/(nrow(Cov)-ncol(Cov))
   SXX.inv <- solve( t(Cov) %*% Cov )
   Beta.hat <- Y %*% Cov %*% SXX.inv
-  return(list(p=2*pt( -abs(Beta.hat[,1:d])/sqrt(Delta.hat)/sqrt(diag(SXX.inv)[1:d]), df = nrow(Cov)-ncol(Cov) ), tau=NULL, Beta.hat=Beta.hat[,1:d], Delta.hat=Delta.hat))
+  if (d==1) {
+    t <- Beta.hat[,1:d]/sqrt(Delta.hat)/sqrt(diag(SXX.inv)[1:d])
+  } else {
+    t <- (Beta.hat[,1:d]/sqrt(Delta.hat))%*%diag(1/sqrt(diag(SXX.inv)[1:d]))
+  }
+  return(list(t=t, p=2*pt( -abs(t), df = nrow(Cov)-ncol(Cov) ), tau=NULL, Beta.hat=Beta.hat[,1:d], Delta.hat=Delta.hat))
 }
