@@ -42,7 +42,7 @@ ChooseK_parallel.multB.simrho <- function(Y, X=NULL, maxK, B, nFolds=10, A.lin=N
   clusterExport(cl, c("SYY", "B", "maxK", "A.lin", "c.lin", "D.ker", "Var.0", "tol.rho", "max.iter.rho", "svd.method", "p"), envir=environment())
   out.parallel <- try(parSapply(cl=cl, Y.list, XVal_K.multB.simrho))
   stopCluster(cl)
-  if (class(out.parallel) == "try-error") {
+  if (inherits(x = out.parallel, what = "try-error")) {
     cat("Error running in parallel. Running sequentially.\n")
     out.parallel <- matrix(0, nrow=maxK+1, ncol=nFolds)
     for (i in 1:nFolds) {
